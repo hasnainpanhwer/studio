@@ -84,6 +84,23 @@ export default function PageEdgeHome() {
     setActivePageIndex(null);
   }
 
+  const handleDeletePage = (indexToDelete: number) => {
+    setPages(prevPages => prevPages.filter((_, index) => index !== indexToDelete));
+
+    // Adjust active page index after deletion
+    if (activePageIndex === indexToDelete) {
+      setActivePageIndex(null);
+    } else if (activePageIndex !== null && activePageIndex > indexToDelete) {
+      setActivePageIndex(activePageIndex - 1);
+    }
+    
+    toast({
+        title: "Page Deleted",
+        description: `Page ${indexToDelete + 1} has been removed.`,
+    });
+  };
+
+
   const handleEnhance = async () => {
     if (!activePage?.originalImageDataUri) return;
     setIsLoading(prev => ({ ...prev, enhance: true }));
@@ -282,6 +299,7 @@ export default function PageEdgeHome() {
           activePageIndex={activePageIndex}
           onSelectPage={setActivePageIndex}
           onAddNewPage={handleAddNewPage}
+          onDeletePage={handleDeletePage}
         />
         <div className="flex-1 p-4 md:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 max-w-7xl mx-auto">
