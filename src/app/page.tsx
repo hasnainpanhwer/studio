@@ -74,6 +74,14 @@ export default function PageEdgeHome() {
     setIsLoading(prev => ({ ...prev, ocr: false }));
   };
 
+  const handleCropBoxApply = (newCropBox: CropBox) => {
+    setCropBox(newCropBox);
+    toast({
+      title: 'Adjustments Applied',
+      description: 'The manual crop adjustments have been applied to the preview.',
+    });
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
@@ -108,7 +116,7 @@ export default function PageEdgeHome() {
                         enhancementResult={enhancementResult}
                         isEnhancing={isLoading.enhance}
                         cropBox={cropBox}
-                        onCropBoxChange={setCropBox}
+                        onCropBoxApply={handleCropBoxApply}
                       />
                     </TabsContent>
                     <TabsContent value="ocr" className="mt-6">
