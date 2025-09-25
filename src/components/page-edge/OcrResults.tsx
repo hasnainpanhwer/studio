@@ -183,7 +183,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
 
       {(isOcring || ocrResult) && <Separator />}
 
-      {isOcring && (
+      {isOcring && !ocrResult && (
         <div className="space-y-4">
             <div className="space-y-2">
                 <Label>Extracted Text</Label>
