@@ -25,47 +25,55 @@ export default function PageEdgeHome() {
 
   const updateActivePage = (pageData: Partial<Page>) => {
     if (activePageIndex === null) return;
-    const newPages = [...pages];
-    newPages[activePageIndex] = { ...newPages[activePageIndex], ...pageData };
-    setPages(newPages);
+    setPages(prevPages => {
+      const newPages = [...prevPages];
+      newPages[activePageIndex] = { ...newPages[activePageIndex], ...pageData };
+      return newPages;
+    });
   };
 
   const handleImageUpload = (files: File[]) => {
-    const newPages: Page[] = [];
-    let processedCount = 0;
-
     if (files.length === 0) return;
 
-    const processFile = (file: File) => {
+    const filePromises = Array.from(files).map(file => {
+      return new Promise<Page>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
-            const dataUri = e.target?.result as string;
-            newPages.push({
-                id: Date.now().toString() + Math.random(),
-                imageDataUri: dataUri,
-                originalImageDataUri: dataUri,
-                ocrResult: null,
-                enhancementResult: null,
-                translationResult: null,
-                cropBox: { top: 10, right: 10, bottom: 10, left: 10 },
-            });
-            
-            processedCount++;
-            if (processedCount === files.length) {
-                const updatedPages = [...pages, ...newPages];
-                setPages(updatedPages);
-                // Set the active page to the first of the newly added pages
-                setActivePageIndex(pages.length);
-                 toast({
-                    title: `${files.length} page(s) added`,
-                    description: 'Your new pages have been added to the list.',
-                });
-            }
+          const dataUri = e.target?.result as string;
+          resolve({
+            id: Date.now().toString() + Math.random(),
+            imageDataUri: dataUri,
+            originalImageDataUri: dataUri,
+            ocrResult: null,
+            enhancementResult: null,
+            translationResult: null,
+            cropBox: { top: 10, right: 10, bottom: 10, left: 10 },
+          });
         };
+        reader.onerror = reject;
         reader.readAsDataURL(file);
-    };
+      });
+    });
 
-    files.forEach(processFile);
+    Promise.all(filePromises).then(newPages => {
+      setPages(prevPages => {
+        const updatedPages = [...prevPages, ...newPages];
+        // Set the active page to the first of the newly added pages
+        setActivePageIndex(prevPages.length);
+        return updatedPages;
+      });
+      toast({
+        title: `${newPages.length} page(s) added`,
+        description: 'Your new pages have been added to the list.',
+      });
+    }).catch(error => {
+        console.error("Error reading files:", error);
+        toast({
+            variant: "destructive",
+            title: "File Read Error",
+            description: "There was an error processing the uploaded files."
+        });
+    });
   };
   
   const handleAddNewPage = () => {

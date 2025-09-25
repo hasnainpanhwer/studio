@@ -47,6 +47,10 @@ export function UploadPanel({ onImageUpload }: UploadPanelProps) {
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     handleFileSelect(e.target.files);
+    // Reset the input value to allow uploading the same file again
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
   };
 
   return (
