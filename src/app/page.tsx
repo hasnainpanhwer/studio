@@ -23,13 +23,17 @@ export default function PageEdgeHome() {
 
   const activePage = activePageIndex !== null ? pages[activePageIndex] : null;
 
-  const updateActivePage = (pageData: Partial<Page>) => {
-    if (activePageIndex === null) return;
+  const updatePage = (index: number, pageData: Partial<Page>) => {
     setPages(prevPages => {
       const newPages = [...prevPages];
-      newPages[activePageIndex] = { ...newPages[activePageIndex], ...pageData };
+      newPages[index] = { ...newPages[index], ...pageData };
       return newPages;
     });
+  };
+
+  const updateActivePage = (pageData: Partial<Page>) => {
+    if (activePageIndex === null) return;
+    updatePage(activePageIndex, pageData);
   };
 
   const handleImageUpload = (files: File[]) => {
@@ -109,7 +113,7 @@ export default function PageEdgeHome() {
     setIsLoading(prev => ({ ...prev, enhance: false }));
   };
 
-  const handleOcr = async () => {
+  const handleSingleOcr = async () => {
     if (!activePage?.imageDataUri) return;
     setIsLoading(prev => ({ ...prev, ocr: true }));
     updateActivePage({ ocrResult: null, translationResult: null });
@@ -125,6 +129,54 @@ export default function PageEdgeHome() {
       });
     }
     setIsLoading(prev => ({ ...prev, ocr: false }));
+  };
+
+  const handleBulkOcr = async (pagesToProcess: Page[]) => {
+    if (pagesToProcess.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Pages to Process',
+        description: 'No pages were selected for OCR.',
+      });
+      return;
+    }
+
+    setIsLoading(prev => ({ ...prev, ocr: true }));
+    toast({
+      title: 'Bulk OCR Started',
+      description: `Extracting text from ${pagesToProcess.length} pages. This may take a moment.`,
+    });
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const page of pagesToProcess) {
+        const pageIndex = pages.findIndex(p => p.id === page.id);
+        if (pageIndex === -1 || !page.imageDataUri) {
+            errorCount++;
+            continue;
+        }
+
+        updatePage(pageIndex, { ocrResult: null, translationResult: null });
+        
+        try {
+            const result = await extractTextFromImage(page.imageDataUri);
+            if (result.success) {
+                updatePage(pageIndex, { ocrResult: result.data });
+                successCount++;
+            } else {
+                errorCount++;
+            }
+        } catch (error) {
+            errorCount++;
+        }
+    }
+
+    setIsLoading(prev => ({ ...prev, ocr: false }));
+    toast({
+      title: 'Bulk OCR Complete',
+      description: `${successCount} pages processed successfully. ${errorCount} pages failed.`,
+    });
   };
 
   const handleTranslate = async () => {
@@ -275,12 +327,15 @@ export default function PageEdgeHome() {
                       </TabsContent>
                       <TabsContent value="ocr" className="mt-6">
                         <OcrResults
-                          onOcr={handleOcr}
+                          onOcr={handleSingleOcr}
                           ocrResult={activePage.ocrResult}
                           isOcring={isLoading.ocr}
                           onTranslate={handleTranslate}
                           isTranslating={isLoading.translate}
                           translationResult={activePage.translationResult}
+                          onBulkOcr={handleBulkOcr}
+                          pages={pages}
+                          isBulkOcring={isLoading.ocr}
                         />
                       </TabsContent>
                     </Tabs>

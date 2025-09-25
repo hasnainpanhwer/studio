@@ -1,13 +1,17 @@
 'use client';
 
-import { ScanText, Loader2, Languages, Download } from 'lucide-react';
+import { ScanText, Loader2, Languages, Download, BookCopy, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { OcrResult, TranslationResult } from '@/lib/types';
+import type { OcrResult, TranslationResult, Page } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
+import { Input } from '../ui/input';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+
 
 interface OcrResultsProps {
   onOcr: () => void;
@@ -16,9 +20,16 @@ interface OcrResultsProps {
   onTranslate: () => void;
   isTranslating: boolean;
   translationResult: TranslationResult | null;
+  onBulkOcr: (pagesToProcess: Page[]) => void;
+  pages: Page[];
+  isBulkOcring: boolean;
 }
 
-export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslating, translationResult }: OcrResultsProps) {
+export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslating, translationResult, onBulkOcr, pages, isBulkOcring }: OcrResultsProps) {
+  const { toast } = useToast();
+  const [rangeStart, setRangeStart] = useState('');
+  const [rangeEnd, setRangeEnd] = useState('');
+  
   const handleExportWord = async () => {
     if (!ocrResult) return;
 
@@ -94,20 +105,80 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     });
   };
 
+  const handleRangeOcr = () => {
+    const start = parseInt(rangeStart, 10);
+    const end = parseInt(rangeEnd, 10);
+    if (isNaN(start) || isNaN(end) || start < 1 || end > pages.length || start > end) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Page Range',
+        description: `Please enter a valid range between 1 and ${pages.length}.`,
+      });
+      return;
+    }
+    const pagesToProcess = pages.slice(start - 1, end);
+    onBulkOcr(pagesToProcess);
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <p className="text-sm text-muted-foreground mb-4">
-          Run Optical Character Recognition (OCR) to extract editable text from the cleaned image.
+          Run Optical Character Recognition (OCR) to extract editable text from the current page.
         </p>
         <Button onClick={onOcr} disabled={isOcring} className="w-full">
-          {isOcring ? (
+          {isOcring && !isBulkOcring ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <ScanText className="mr-2 h-4 w-4" />
           )}
-          Extract Text
+          Extract Text from Current Page
         </Button>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="text-md font-medium mb-2">Bulk OCR Processing</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Extract text from all pages or a specific range of pages.
+        </p>
+        <div className="space-y-4">
+           <Button onClick={() => onBulkOcr(pages)} disabled={isBulkOcring} className="w-full">
+             {isBulkOcring ? (
+               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+             ) : (
+               <BookCopy className="mr-2 h-4 w-4" />
+             )}
+             Extract from All Pages ({pages.length})
+           </Button>
+           <div className="flex items-center gap-2">
+             <Input 
+               type="number" 
+               placeholder="From" 
+               className="w-1/2" 
+               value={rangeStart}
+               onChange={e => setRangeStart(e.target.value)}
+               disabled={isBulkOcring}
+             />
+             <Input 
+               type="number" 
+               placeholder="To" 
+               className="w-1/2"
+               value={rangeEnd}
+               onChange={e => setRangeEnd(e.target.value)}
+               disabled={isBulkOcring}
+            />
+           </div>
+           <Button onClick={handleRangeOcr} disabled={isBulkOcring} variant="secondary" className="w-full">
+             {isBulkOcring ? (
+               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+             ) : (
+              <FileUp className="mr-2 h-4 w-4" />
+             )}
+             Extract from Range
+           </Button>
+        </div>
       </div>
 
       {(isOcring || ocrResult) && <Separator />}
