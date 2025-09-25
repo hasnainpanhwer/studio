@@ -61,11 +61,11 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
               spacing: { before: 200, after: 100 },
             }),
             new Paragraph({
+              rightToLeft: true,
               children: [
                 new TextRun({
                   text: translationResult.translation1,
                   font: "MB Lateefi",
-                  rightToLeft: true,
                   size: 28, // 14pt
                 }),
               ],
@@ -76,10 +76,10 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
               spacing: { before: 200, after: 100 },
             }),
              new Paragraph({
+              rightToLeft: true,
               children: [
                 new TextRun({
                   text: translationResult.translation2,
-                  rightToLeft: true,
                   size: 24, // 12pt
                 }),
               ],
