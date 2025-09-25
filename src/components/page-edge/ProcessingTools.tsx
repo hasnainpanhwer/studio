@@ -15,19 +15,15 @@ interface ProcessingToolsProps {
   enhancementResult: EnhancementResult | null;
   isEnhancing: boolean;
   cropBox: CropBox;
-  onCropBoxApply: (cropBox: CropBox) => void;
+  onCropBoxChange: (cropBox: CropBox) => void;
+  onCropBoxApply: () => void;
 }
 
-export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cropBox, onCropBoxApply }: ProcessingToolsProps) {
+export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cropBox, onCropBoxChange, onCropBoxApply }: ProcessingToolsProps) {
   const { toast } = useToast();
-  const [manualCropBox, setManualCropBox] = useState<CropBox>(cropBox);
-
-  useEffect(() => {
-    setManualCropBox(cropBox);
-  }, [cropBox]);
-
+  
   const handleSliderChange = (id: keyof CropBox) => (value: number[]) => {
-    setManualCropBox({ ...manualCropBox, [id]: value[0] });
+    onCropBoxChange({ ...cropBox, [id]: value[0] });
   };
   
   const handleExport = (format: string) => {
@@ -38,7 +34,7 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
   }
 
   const handleApply = () => {
-    onCropBoxApply(manualCropBox);
+    onCropBoxApply();
   }
 
   return (
@@ -78,19 +74,19 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
         <div className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="crop-top">Crop Top</Label>
-            <Slider id="crop-top" value={[manualCropBox.top]} onValueChange={handleSliderChange('top')} max={200} step={1} />
+            <Slider id="crop-top" value={[cropBox.top]} onValueChange={handleSliderChange('top')} max={200} step={1} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="crop-right">Crop Right</Label>
-            <Slider id="crop-right" value={[manualCropBox.right]} onValueChange={handleSliderChange('right')} max={200} step={1} />
+            <Slider id="crop-right" value={[cropBox.right]} onValueChange={handleSliderChange('right')} max={200} step={1} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="crop-bottom">Crop Bottom</Label>
-            <Slider id="crop-bottom" value={[manualCropBox.bottom]} onValueChange={handleSliderChange('bottom')} max={200} step={1} />
+            <Slider id="crop-bottom" value={[cropBox.bottom]} onValueChange={handleSliderChange('bottom')} max={200} step={1} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="crop-left">Crop Left</Label>
-            <Slider id="crop-left" value={[manualCropBox.left]} onValueChange={handleSliderChange('left')} max={200} step={1} />
+            <Slider id="crop-left" value={[cropBox.left]} onValueChange={handleSliderChange('left')} max={200} step={1} />
           </div>
         </div>
         <Button onClick={handleApply} className="w-full">
