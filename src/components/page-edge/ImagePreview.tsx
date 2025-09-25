@@ -3,28 +3,38 @@
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Undo2 } from 'lucide-react';
 import type { CropBox } from '@/lib/types';
 
 interface ImagePreviewProps {
   imageDataUri: string;
   onNewImage: () => void;
   cropBox: CropBox;
+  onReset: () => void;
+  originalImageAvailable: boolean;
 }
 
-export function ImagePreview({ imageDataUri, onNewImage, cropBox }: ImagePreviewProps) {
+export function ImagePreview({ imageDataUri, onNewImage, cropBox, onReset, originalImageAvailable }: ImagePreviewProps) {
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-4">
             <div>
                 <CardTitle className="font-headline">Image Preview</CardTitle>
                 <CardDescription>This is the image you've uploaded.</CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={onNewImage}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                New Image
-            </Button>
+            <div className='flex gap-2'>
+              {originalImageAvailable && (
+                <Button variant="outline" size="sm" onClick={onReset}>
+                  <Undo2 className="mr-2 h-4 w-4" />
+                  Reset
+                </Button>
+              )}
+              <Button variant="outline" size="sm" onClick={onNewImage}>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  New Image
+              </Button>
+            </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -35,6 +45,7 @@ export function ImagePreview({ imageDataUri, onNewImage, cropBox }: ImagePreview
             fill
             className="object-contain"
             sizes="(max-width: 1024px) 100vw, 60vw"
+            key={imageDataUri} // Force re-render on image change
           />
           <div
             className="absolute border-2 border-dashed border-destructive pointer-events-none"
