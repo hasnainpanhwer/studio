@@ -11,15 +11,16 @@ import { ProcessingTools } from '@/components/page-edge/ProcessingTools';
 import { OcrResults } from '@/components/page-edge/OcrResults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { enhanceScan, extractTextFromImage, straightenImage } from '@/app/actions';
-import type { EnhancementResult, OcrResult, CropBox } from '@/lib/types';
+import { enhanceScan, extractTextFromImage, straightenImage, getTranslations } from '@/app/actions';
+import type { EnhancementResult, OcrResult, CropBox, TranslationResult } from '@/lib/types';
 
 export default function PageEdgeHome() {
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [originalImageDataUri, setOriginalImageDataUri] = useState<string | null>(null);
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
   const [enhancementResult, setEnhancementResult] = useState<EnhancementResult | null>(null);
-  const [isLoading, setIsLoading] = useState({ ocr: false, enhance: false, straighten: false });
+  const [translationResult, setTranslationResult] = useState<TranslationResult | null>(null);
+  const [isLoading, setIsLoading] = useState({ ocr: false, enhance: false, straighten: false, translate: false });
   const [cropBox, setCropBox] = useState<CropBox>({ top: 10, right: 10, bottom: 10, left: 10 });
   const { toast } = useToast();
 
@@ -31,6 +32,7 @@ export default function PageEdgeHome() {
       setOriginalImageDataUri(dataUri);
       setOcrResult(null);
       setEnhancementResult(null);
+      setTranslationResult(null);
       setCropBox({ top: 10, right: 10, bottom: 10, left: 10 });
     };
     reader.readAsDataURL(file);
@@ -69,6 +71,7 @@ export default function PageEdgeHome() {
     if (!imageDataUri) return;
     setIsLoading(prev => ({ ...prev, ocr: true }));
     setOcrResult(null);
+    setTranslationResult(null);
     const result = await extractTextFromImage(imageDataUri);
     if (result.success) {
       setOcrResult(result.data);
@@ -80,6 +83,23 @@ export default function PageEdgeHome() {
       });
     }
     setIsLoading(prev => ({ ...prev, ocr: false }));
+  };
+
+  const handleTranslate = async () => {
+    if (!ocrResult?.summary) return;
+    setIsLoading(prev => ({ ...prev, translate: true }));
+    setTranslationResult(null);
+    const result = await getTranslations(ocrResult.summary);
+    if (result.success) {
+      setTranslationResult(result.data);
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Translation Failed',
+        description: result.error,
+      });
+    }
+    setIsLoading(prev => ({ ...prev, translate: false }));
   };
   
   const handleStraighten = async () => {
@@ -147,6 +167,7 @@ export default function PageEdgeHome() {
     setCropBox({ top: 10, right: 10, bottom: 10, left: 10 });
     setEnhancementResult(null);
     setOcrResult(null);
+    setTranslationResult(null);
      toast({
       title: 'Image Reset',
       description: 'The image has been reset to its original state.',
@@ -207,6 +228,9 @@ export default function PageEdgeHome() {
                         onOcr={handleOcr}
                         ocrResult={ocrResult}
                         isOcring={isLoading.ocr}
+                        onTranslate={handleTranslate}
+                        isTranslating={isLoading.translate}
+                        translationResult={translationResult}
                       />
                     </TabsContent>
                   </Tabs>

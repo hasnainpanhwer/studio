@@ -3,6 +3,7 @@
 import { enhanceScanQualityWithLLM } from '@/ai/flows/enhance-scan-quality-with-llm';
 import { extractAndSummarizeText } from '@/ai/flows/extract-and-summarize-text';
 import { straightenDocument } from '@/ai/flows/straighten-document-flow';
+import { translateText } from '@/ai/flows/translate-text-flow';
 
 
 type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -43,5 +44,18 @@ export async function straightenImage(imageDataUri: string): Promise<ActionResul
     } catch (error) {
         console.error('Error straightening image:', error);
         return { success: false, error: 'An unexpected error occurred while straightening the image.' };
+    }
+}
+
+export async function getTranslations(textToTranslate: string): Promise<ActionResult<Awaited<ReturnType<typeof translateText>>>> {
+    if (!textToTranslate) {
+        return { success: false, error: 'No text provided for translation.' };
+    }
+    try {
+        const result = await translateText({ textToTranslate, language1: 'Sindhi', language2: 'Urdu' });
+        return { success: true, data: result };
+    } catch (error) {
+        console.error('Error translating text:', error);
+        return { success: false, error: 'An unexpected error occurred during translation.' };
     }
 }
