@@ -98,7 +98,7 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
           </div>
           <div className="grid gap-2">
             <Label htmlFor="crop-left">Crop Left</Label>
-            <Slider id="crop-left" value={[cropBox.left]} onValue-change={handleSliderChange('left')} max={200} step={1} />
+            <Slider id="crop-left" value={[cropBox.left]} onValueChange={handleSliderChange('left')} max={200} step={1} />
           </div>
         </div>
         <Button onClick={handleApply} className="w-full">
