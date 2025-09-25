@@ -65,7 +65,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
               
               <div className="space-y-2">
                 <h2 style={{ fontSize: '18px', borderBottom: '1px solid #374151', paddingBottom: '4px', marginBottom: '8px' }}>Extracted Text</h2>
-                <p style={{ fontSize: '14px', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{ocrResult.extractedText}</p>
+                <p style={{ fontSize: '14px', whiteSpace: 'pre-wrap', fontFamily: 'Times New Roman, serif' }}>{ocrResult.extractedText}</p>
               </div>
 
               <div className="space-y-2">
@@ -109,7 +109,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
           <div>
             <Label htmlFor="extracted-text" className="mb-2 block">Extracted Text</Label>
             <ScrollArea className="h-60 w-full rounded-md border">
-                <div className="p-4 font-mono text-sm">{ocrResult.extractedText || "No text extracted."}</div>
+                <div className="p-4 font-serif text-sm">{ocrResult.extractedText || "No text extracted."}</div>
             </ScrollArea>
           </div>
           <div>
