@@ -8,9 +8,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { OcrResult, TranslationResult } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
-import { saveAs } from 'file-saver';
-
 
 interface OcrResultsProps {
   onOcr: () => void;
@@ -22,8 +19,12 @@ interface OcrResultsProps {
 }
 
 export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslating, translationResult }: OcrResultsProps) {
-  const handleExportWord = () => {
+  const handleExportWord = async () => {
     if (!ocrResult) return;
+
+    // Dynamically import client-side libraries
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx');
+    const { saveAs } = await import('file-saver');
 
     const doc = new Document({
       sections: [{
