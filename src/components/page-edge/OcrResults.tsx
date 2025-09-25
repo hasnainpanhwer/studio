@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { OcrResult } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
+import { Separator } from '../ui/separator';
 
 interface OcrResultsProps {
   onOcr: () => void;

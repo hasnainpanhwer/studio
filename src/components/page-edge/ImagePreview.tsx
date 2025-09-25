@@ -4,13 +4,15 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import type { CropBox } from '@/lib/types';
 
 interface ImagePreviewProps {
   imageDataUri: string;
   onNewImage: () => void;
+  cropBox: CropBox;
 }
 
-export function ImagePreview({ imageDataUri, onNewImage }: ImagePreviewProps) {
+export function ImagePreview({ imageDataUri, onNewImage, cropBox }: ImagePreviewProps) {
   return (
     <Card>
       <CardHeader>
@@ -34,6 +36,15 @@ export function ImagePreview({ imageDataUri, onNewImage }: ImagePreviewProps) {
             className="object-contain"
             sizes="(max-width: 1024px) 100vw, 60vw"
           />
+          <div
+            className="absolute border-2 border-dashed border-destructive pointer-events-none"
+            style={{
+              top: `${cropBox.top}px`,
+              right: `${cropBox.right}px`,
+              bottom: `${cropBox.bottom}px`,
+              left: `${cropBox.left}px`,
+            }}
+          ></div>
         </div>
       </CardContent>
     </Card>

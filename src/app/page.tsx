@@ -12,13 +12,14 @@ import { OcrResults } from '@/components/page-edge/OcrResults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { enhanceScan, extractTextFromImage } from '@/app/actions';
-import type { EnhancementResult, OcrResult } from '@/lib/types';
+import type { EnhancementResult, OcrResult, CropBox } from '@/lib/types';
 
 export default function PageEdgeHome() {
   const [imageDataUri, setImageDataUri] = useState<string | null>(null);
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
   const [enhancementResult, setEnhancementResult] = useState<EnhancementResult | null>(null);
   const [isLoading, setIsLoading] = useState({ ocr: false, enhance: false });
+  const [cropBox, setCropBox] = useState<CropBox>({ top: 10, right: 10, bottom: 10, left: 10 });
   const { toast } = useToast();
 
   const handleImageUpload = (file: File) => {
@@ -27,6 +28,7 @@ export default function PageEdgeHome() {
       setImageDataUri(e.target?.result as string);
       setOcrResult(null);
       setEnhancementResult(null);
+      setCropBox({ top: 10, right: 10, bottom: 10, left: 10 });
     };
     reader.readAsDataURL(file);
   };
@@ -38,6 +40,13 @@ export default function PageEdgeHome() {
     const result = await enhanceScan(imageDataUri);
     if (result.success) {
       setEnhancementResult(result.data);
+      setCropBox(prev => ({
+        ...prev,
+        left: result.data.estimatedBorderThickness,
+        right: result.data.estimatedBorderThickness,
+        top: result.data.estimatedBorderThickness,
+        bottom: result.data.estimatedBorderThickness,
+      }))
     } else {
       toast({
         variant: 'destructive',
@@ -72,7 +81,7 @@ export default function PageEdgeHome() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3 flex flex-col gap-8">
             {imageDataUri ? (
-              <ImagePreview imageDataUri={imageDataUri} onNewImage={() => setImageDataUri(null)} />
+              <ImagePreview imageDataUri={imageDataUri} onNewImage={() => setImageDataUri(null)} cropBox={cropBox} />
             ) : (
               <UploadPanel onImageUpload={handleImageUpload} />
             )}
@@ -98,6 +107,8 @@ export default function PageEdgeHome() {
                         onEnhance={handleEnhance}
                         enhancementResult={enhancementResult}
                         isEnhancing={isLoading.enhance}
+                        cropBox={cropBox}
+                        onCropBoxChange={setCropBox}
                       />
                     </TabsContent>
                     <TabsContent value="ocr" className="mt-6">
