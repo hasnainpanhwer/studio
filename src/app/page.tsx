@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { ChangeEvent } from 'react';
-import { Loader2, BookOpen, Settings, FileText } from 'lucide-react';
+import { Loader2, BookOpen, Settings, FileText, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/page-edge/Header';
 import { UploadPanel } from '@/components/page-edge/UploadPanel';
@@ -12,46 +11,62 @@ import { OcrResults } from '@/components/page-edge/OcrResults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { enhanceScan, extractTextFromImage, straightenImage, getTranslations } from '@/app/actions';
-import type { EnhancementResult, OcrResult, CropBox, TranslationResult } from '@/lib/types';
+import type { EnhancementResult, OcrResult, CropBox, TranslationResult, Page } from '@/lib/types';
+import { PageList } from '@/components/page-edge/PageList';
 
 export default function PageEdgeHome() {
-  const [imageDataUri, setImageDataUri] = useState<string | null>(null);
-  const [originalImageDataUri, setOriginalImageDataUri] = useState<string | null>(null);
-  const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
-  const [enhancementResult, setEnhancementResult] = useState<EnhancementResult | null>(null);
-  const [translationResult, setTranslationResult] = useState<TranslationResult | null>(null);
+  const [pages, setPages] = useState<Page[]>([]);
+  const [activePageIndex, setActivePageIndex] = useState<number | null>(null);
+
   const [isLoading, setIsLoading] = useState({ ocr: false, enhance: false, straighten: false, translate: false });
-  const [cropBox, setCropBox] = useState<CropBox>({ top: 10, right: 10, bottom: 10, left: 10 });
   const { toast } = useToast();
+
+  const activePage = activePageIndex !== null ? pages[activePageIndex] : null;
+
+  const updateActivePage = (pageData: Partial<Page>) => {
+    if (activePageIndex === null) return;
+    const newPages = [...pages];
+    newPages[activePageIndex] = { ...newPages[activePageIndex], ...pageData };
+    setPages(newPages);
+  };
 
   const handleImageUpload = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const dataUri = e.target?.result as string;
-      setImageDataUri(dataUri);
-      setOriginalImageDataUri(dataUri);
-      setOcrResult(null);
-      setEnhancementResult(null);
-      setTranslationResult(null);
-      setCropBox({ top: 10, right: 10, bottom: 10, left: 10 });
+      const newPage: Page = {
+        id: Date.now().toString(),
+        imageDataUri: dataUri,
+        originalImageDataUri: dataUri,
+        ocrResult: null,
+        enhancementResult: null,
+        translationResult: null,
+        cropBox: { top: 10, right: 10, bottom: 10, left: 10 },
+      };
+      setPages([...pages, newPage]);
+      setActivePageIndex(pages.length);
     };
     reader.readAsDataURL(file);
   };
   
+  const handleAddNewPage = () => {
+    setActivePageIndex(null);
+  }
+
   const handleEnhance = async () => {
-    if (!originalImageDataUri) return;
+    if (!activePage?.originalImageDataUri) return;
     setIsLoading(prev => ({ ...prev, enhance: true }));
-    setEnhancementResult(null);
-    const result = await enhanceScan(originalImageDataUri);
+    updateActivePage({ enhancementResult: null });
+
+    const result = await enhanceScan(activePage.originalImageDataUri);
     if (result.success) {
-      setEnhancementResult(result.data);
       const newCropBox = {
         top: result.data.estimatedBorderThickness,
         right: result.data.estimatedBorderThickness,
         bottom: result.data.estimatedBorderThickness,
         left: result.data.estimatedBorderThickness,
       };
-      setCropBox(newCropBox);
+      updateActivePage({ enhancementResult: result.data, cropBox: newCropBox });
       handleCropBoxApply(newCropBox, true);
        toast({
         title: 'AI Enhancement Applied',
@@ -68,13 +83,13 @@ export default function PageEdgeHome() {
   };
 
   const handleOcr = async () => {
-    if (!imageDataUri) return;
+    if (!activePage?.imageDataUri) return;
     setIsLoading(prev => ({ ...prev, ocr: true }));
-    setOcrResult(null);
-    setTranslationResult(null);
-    const result = await extractTextFromImage(imageDataUri);
+    updateActivePage({ ocrResult: null, translationResult: null });
+    
+    const result = await extractTextFromImage(activePage.imageDataUri);
     if (result.success) {
-      setOcrResult(result.data);
+      updateActivePage({ ocrResult: result.data });
     } else {
       toast({
         variant: 'destructive',
@@ -86,12 +101,13 @@ export default function PageEdgeHome() {
   };
 
   const handleTranslate = async () => {
-    if (!ocrResult?.summary) return;
+    if (!activePage?.ocrResult?.summary) return;
     setIsLoading(prev => ({ ...prev, translate: true }));
-    setTranslationResult(null);
-    const result = await getTranslations(ocrResult.summary);
+    updateActivePage({ translationResult: null });
+
+    const result = await getTranslations(activePage.ocrResult.summary);
     if (result.success) {
-      setTranslationResult(result.data);
+      updateActivePage({ translationResult: result.data });
     } else {
       toast({
         variant: 'destructive',
@@ -103,11 +119,11 @@ export default function PageEdgeHome() {
   };
   
   const handleStraighten = async () => {
-    if (!imageDataUri) return;
+    if (!activePage?.imageDataUri) return;
     setIsLoading(prev => ({...prev, straighten: true}));
-    const result = await straightenImage(imageDataUri);
+    const result = await straightenImage(activePage.imageDataUri);
     if (result.success && result.data.straightenedImageUri) {
-      setImageDataUri(result.data.straightenedImageUri);
+      updateActivePage({ imageDataUri: result.data.straightenedImageUri });
       toast({
         title: 'Image Straightened',
         description: 'The document has been straightened and cleaned.',
@@ -123,12 +139,13 @@ export default function PageEdgeHome() {
   };
 
   const handleCropBoxChange = (newCropBox: CropBox) => {
-    setCropBox(newCropBox);
+    updateActivePage({ cropBox: newCropBox });
   };
 
   const handleCropBoxApply = (boxToApply?: CropBox, quiet: boolean = false) => {
-    const theCropBox = boxToApply || cropBox;
-    if (!originalImageDataUri) return;
+    if (!activePage) return;
+    const theCropBox = boxToApply || activePage.cropBox;
+    if (!activePage.imageDataUri) return;
 
     const img = new Image();
     img.onload = () => {
@@ -147,7 +164,10 @@ export default function PageEdgeHome() {
         ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
         
         const newDataUri = canvas.toDataURL('image/jpeg');
-        setImageDataUri(newDataUri);
+        updateActivePage({ 
+          imageDataUri: newDataUri,
+          cropBox: { top: 0, right: 0, bottom: 0, left: 0 }
+        });
 
         if (!quiet) {
           toast({
@@ -155,19 +175,19 @@ export default function PageEdgeHome() {
             description: 'The manual crop adjustments have been applied to the preview.',
           });
         }
-        
-        // After applying, reset the crop box for the *new* image
-        setCropBox({ top: 0, right: 0, bottom: 0, left: 0 });
     };
-    img.src = imageDataUri; // Use current image data, not original
+    img.src = activePage.imageDataUri; // Use current image data, not original
   };
   
   const handleReset = () => {
-    setImageDataUri(originalImageDataUri);
-    setCropBox({ top: 10, right: 10, bottom: 10, left: 10 });
-    setEnhancementResult(null);
-    setOcrResult(null);
-    setTranslationResult(null);
+    if (!activePage) return;
+    updateActivePage({
+      imageDataUri: activePage.originalImageDataUri,
+      cropBox: { top: 10, right: 10, bottom: 10, left: 10 },
+      enhancementResult: null,
+      ocrResult: null,
+      translationResult: null,
+    });
      toast({
       title: 'Image Reset',
       description: 'The image has been reset to its original state.',
@@ -177,66 +197,70 @@ export default function PageEdgeHome() {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-3 flex flex-col gap-8">
-            {imageDataUri ? (
-              <ImagePreview 
-                imageDataUri={imageDataUri} 
-                onNewImage={() => {
-                  setImageDataUri(null);
-                  setOriginalImageDataUri(null);
-                }} 
-                cropBox={cropBox} 
-                onReset={handleReset}
-                originalImageAvailable={!!originalImageDataUri && imageDataUri !== originalImageDataUri}
-              />
-            ) : (
-              <UploadPanel onImageUpload={handleImageUpload} />
-            )}
-          </div>
+      <main className="flex-1 w-full max-w-full mx-auto flex">
+        <PageList 
+          pages={pages}
+          activePageIndex={activePageIndex}
+          onSelectPage={setActivePageIndex}
+          onAddNewPage={handleAddNewPage}
+        />
+        <div className="flex-1 p-4 md:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 max-w-7xl mx-auto">
+            <div className="lg:col-span-3 flex flex-col gap-8">
+              {activePage ? (
+                <ImagePreview 
+                  imageDataUri={activePage.imageDataUri} 
+                  cropBox={activePage.cropBox} 
+                  onReset={handleReset}
+                  originalImageAvailable={!!activePage.originalImageDataUri && activePage.imageDataUri !== activePage.originalImageDataUri}
+                />
+              ) : (
+                <UploadPanel onImageUpload={handleImageUpload} />
+              )}
+            </div>
 
-          <div className="lg:col-span-2">
-            {imageDataUri && (
-              <Card className="sticky top-8">
-                <CardHeader>
-                  <CardTitle className="font-headline flex items-center gap-2">
-                    <BookOpen className="w-6 h-6 text-primary" />
-                    Page Processing
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="tools" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="tools"><Settings className="w-4 h-4 mr-2" /> Tools</TabsTrigger>
-                      <TabsTrigger value="ocr"><FileText className="w-4 h-4 mr-2" />Extracted Text</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="tools" className="mt-6">
-                      <ProcessingTools
-                        onEnhance={handleEnhance}
-                        enhancementResult={enhancementResult}
-                        isEnhancing={isLoading.enhance}
-                        cropBox={cropBox}
-                        onCropBoxChange={handleCropBoxChange}
-                        onCropBoxApply={() => handleCropBoxApply()}
-                        onStraighten={handleStraighten}
-                        isStraightening={isLoading.straighten}
-                      />
-                    </TabsContent>
-                    <TabsContent value="ocr" className="mt-6">
-                      <OcrResults
-                        onOcr={handleOcr}
-                        ocrResult={ocrResult}
-                        isOcring={isLoading.ocr}
-                        onTranslate={handleTranslate}
-                        isTranslating={isLoading.translate}
-                        translationResult={translationResult}
-                      />
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            )}
+            <div className="lg:col-span-2">
+              {activePage && (
+                <Card className="sticky top-8">
+                  <CardHeader>
+                    <CardTitle className="font-headline flex items-center gap-2">
+                      <BookOpen className="w-6 h-6 text-primary" />
+                      Page Processing
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <Tabs defaultValue="tools" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="tools"><Settings className="w-4 h-4 mr-2" /> Tools</TabsTrigger>
+                        <TabsTrigger value="ocr"><FileText className="w-4 h-4 mr-2" />Extracted Text</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="tools" className="mt-6">
+                        <ProcessingTools
+                          onEnhance={handleEnhance}
+                          enhancementResult={activePage.enhancementResult}
+                          isEnhancing={isLoading.enhance}
+                          cropBox={activePage.cropBox}
+                          onCropBoxChange={handleCropBoxChange}
+                          onCropBoxApply={() => handleCropBoxApply()}
+                          onStraighten={handleStraighten}
+                          isStraightening={isLoading.straighten}
+                        />
+                      </TabsContent>
+                      <TabsContent value="ocr" className="mt-6">
+                        <OcrResults
+                          onOcr={handleOcr}
+                          ocrResult={activePage.ocrResult}
+                          isOcring={isLoading.ocr}
+                          onTranslate={handleTranslate}
+                          isTranslating={isLoading.translate}
+                          translationResult={activePage.translationResult}
+                        />
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </div>
         </div>
       </main>

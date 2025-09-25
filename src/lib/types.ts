@@ -12,3 +12,13 @@ export type CropBox = {
     bottom: number;
     left: number;
 };
+
+export interface Page {
+    id: string;
+    imageDataUri: string | null;
+    originalImageDataUri: string | null;
+    ocrResult: OcrResult | null;
+    enhancementResult: EnhancementResult | null;
+    translationResult: TranslationResult | null;
+    cropBox: CropBox;
+}
