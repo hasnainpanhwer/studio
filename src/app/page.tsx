@@ -30,23 +30,42 @@ export default function PageEdgeHome() {
     setPages(newPages);
   };
 
-  const handleImageUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUri = e.target?.result as string;
-      const newPage: Page = {
-        id: Date.now().toString(),
-        imageDataUri: dataUri,
-        originalImageDataUri: dataUri,
-        ocrResult: null,
-        enhancementResult: null,
-        translationResult: null,
-        cropBox: { top: 10, right: 10, bottom: 10, left: 10 },
-      };
-      setPages([...pages, newPage]);
-      setActivePageIndex(pages.length);
+  const handleImageUpload = (files: File[]) => {
+    const newPages: Page[] = [];
+    let processedCount = 0;
+
+    if (files.length === 0) return;
+
+    const processFile = (file: File) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUri = e.target?.result as string;
+            newPages.push({
+                id: Date.now().toString() + Math.random(),
+                imageDataUri: dataUri,
+                originalImageDataUri: dataUri,
+                ocrResult: null,
+                enhancementResult: null,
+                translationResult: null,
+                cropBox: { top: 10, right: 10, bottom: 10, left: 10 },
+            });
+            
+            processedCount++;
+            if (processedCount === files.length) {
+                const updatedPages = [...pages, ...newPages];
+                setPages(updatedPages);
+                // Set the active page to the first of the newly added pages
+                setActivePageIndex(pages.length);
+                 toast({
+                    title: `${files.length} page(s) added`,
+                    description: 'Your new pages have been added to the list.',
+                });
+            }
+        };
+        reader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
+
+    files.forEach(processFile);
   };
   
   const handleAddNewPage = () => {

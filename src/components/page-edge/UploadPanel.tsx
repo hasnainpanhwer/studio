@@ -8,7 +8,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
 
 interface UploadPanelProps {
-  onImageUpload: (file: File) => void;
+  onImageUpload: (files: File[]) => void;
 }
 
 export function UploadPanel({ onImageUpload }: UploadPanelProps) {
@@ -18,7 +18,7 @@ export function UploadPanel({ onImageUpload }: UploadPanelProps) {
 
   const handleFileSelect = (files: FileList | null) => {
     if (files && files.length > 0) {
-      onImageUpload(files[0]);
+      onImageUpload(Array.from(files));
     }
   };
 
@@ -72,10 +72,10 @@ export function UploadPanel({ onImageUpload }: UploadPanelProps) {
       <div className="z-10 flex flex-col items-center gap-4 transition-transform duration-300 group-hover:scale-105">
         <UploadCloud className="w-16 h-16 text-muted-foreground group-hover:text-primary" />
         <h2 className="text-2xl font-bold font-headline text-foreground">
-          Capture or Upload a Page
+          Capture or Upload Pages
         </h2>
         <p className="text-muted-foreground">
-          Drag & drop an image here, or click to select a file.
+          Drag & drop images here, or click to select files.
         </p>
       </div>
       <Input
@@ -84,6 +84,7 @@ export function UploadPanel({ onImageUpload }: UploadPanelProps) {
         accept="image/*"
         className="hidden"
         onChange={handleInputChange}
+        multiple
       />
     </div>
   );
