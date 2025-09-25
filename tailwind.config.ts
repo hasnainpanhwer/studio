@@ -13,6 +13,7 @@ export default {
         body: ['Inter', 'sans-serif'],
         headline: ['Literata', 'serif'],
         code: ['monospace'],
+        sindhi: ['"MB Lateefi"','General Sans', 'sans-serif'],
       },
       colors: {
         background: 'hsl(var(--background))',

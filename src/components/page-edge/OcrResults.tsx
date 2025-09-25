@@ -103,7 +103,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                       id="sindhi-translation"
                       readOnly
                       value={translationResult.translation1 || "No Sindhi translation."}
-                      className="h-24"
+                      className="h-24 font-sindhi text-lg"
                       dir="rtl"
                     />
                   </div>
