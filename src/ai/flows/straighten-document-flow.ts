@@ -44,7 +44,7 @@ const straightenDocumentFlow = ai.defineFlow(
       prompt: [
         {media: {url: input.photoDataUri}},
         {
-          text: 'Straighten the document in this image. Correct any perspective distortion and rotation to make the text appear flat and perfectly horizontal, as if it were scanned perfectly. The background should be clean and white. Output only the transformed image.',
+          text: 'Analyze the text within this image to straighten the document. Read the text to understand its flow and alignment. Correct any perspective distortion and rotation to make the text lines appear flat and perfectly horizontal, as if it were scanned perfectly. The background should be clean and white. Output only the transformed image.',
         },
       ],
       config: {
