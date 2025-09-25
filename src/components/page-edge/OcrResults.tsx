@@ -1,6 +1,6 @@
 'use client';
 
-import { ScanText, Loader2, Languages } from 'lucide-react';
+import { ScanText, Loader2, Languages, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { OcrResult, TranslationResult } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface OcrResultsProps {
   onOcr: () => void;
@@ -19,6 +21,24 @@ interface OcrResultsProps {
 }
 
 export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslating, translationResult }: OcrResultsProps) {
+  const handleExportPdf = () => {
+    const pdfExportContent = document.getElementById('pdf-export-content');
+    if (pdfExportContent) {
+      html2canvas(pdfExportContent, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        backgroundColor: '#111827' // Same as dark theme background
+      }).then(canvas => {
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgData = canvas.toDataURL('image/png');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        pdf.save('PageEdge-Export.pdf');
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -36,6 +56,40 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       </div>
 
       {(isOcring || ocrResult) && <Separator />}
+      
+      {/* Hidden div for PDF export */}
+      <div id="pdf-export-content" style={{ position: 'absolute', left: '-9999px', width: '800px', padding: '20px', background: '#111827', color: 'white' }}>
+          {ocrResult && (
+            <div className="space-y-6 font-body">
+              <h1 style={{ fontSize: '24px', fontFamily: 'Literata, serif' }}>PageEdge Export</h1>
+              
+              <div className="space-y-2">
+                <h2 style={{ fontSize: '18px', borderBottom: '1px solid #374151', paddingBottom: '4px', marginBottom: '8px' }}>Extracted Text</h2>
+                <p style={{ fontSize: '14px', whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{ocrResult.extractedText}</p>
+              </div>
+
+              <div className="space-y-2">
+                <h2 style={{ fontSize: '18px', borderBottom: '1px solid #374151', paddingBottom: '4px', marginBottom: '8px' }}>Summary</h2>
+                <p style={{ fontSize: '14px', whiteSpace: 'pre-wrap' }}>{ocrResult.summary}</p>
+              </div>
+              
+              {translationResult && (
+                <>
+                  <div className="space-y-2">
+                    <h2 style={{ fontSize: '18px', borderBottom: '1px solid #374151', paddingBottom: '4px', marginBottom: '8px' }}>Sindhi Translation</h2>
+                    <p style={{ fontSize: '18px', whiteSpace: 'pre-wrap', fontFamily: '"MB Lateefi", sans-serif' }} dir="rtl">{translationResult.translation1}</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h2 style={{ fontSize: '18px', borderBottom: '1px solid #374151', paddingBottom: '4px', marginBottom: '8px' }}>Urdu Translation</h2>
+                    <p style={{ fontSize: '16px', whiteSpace: 'pre-wrap' }} dir="rtl">{translationResult.translation2}</p>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+      </div>
+
 
       {isOcring && (
         <div className="space-y-4">
@@ -70,7 +124,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
 
           <Separator />
 
-          <div>
+          <div className="grid grid-cols-2 gap-2">
              <Button onClick={onTranslate} disabled={isTranslating || !ocrResult.summary} className="w-full">
               {isTranslating ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -78,6 +132,10 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                 <Languages className="mr-2 h-4 w-4" />
               )}
               Translate Summary
+            </Button>
+            <Button onClick={handleExportPdf} disabled={!ocrResult} variant="secondary" className="w-full">
+                <Download className="mr-2 h-4 w-4" />
+                Export as PDF
             </Button>
           </div>
 

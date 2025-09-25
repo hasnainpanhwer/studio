@@ -28,10 +28,10 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
     onCropBoxChange({ ...cropBox, [id]: value[0] });
   };
   
-  const handleExport = (format: string) => {
+  const handleExport = () => {
     toast({
-        title: `Exporting ${format}`,
-        description: `Your document is being prepared for export as a ${format} file.`,
+        title: `Exporting JPG`,
+        description: `This feature is not yet implemented.`,
     });
   }
 
@@ -98,7 +98,7 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
           </div>
           <div className="grid gap-2">
             <Label htmlFor="crop-left">Crop Left</Label>
-            <Slider id="crop-left" value={[cropBox.left]} onValueChange={handleSliderChange('left')} max={200} step={1} />
+            <Slider id="crop-left" value={[cropBox.left]} onValue-change={handleSliderChange('left')} max={200} step={1} />
           </div>
         </div>
         <Button onClick={handleApply} className="w-full">
@@ -111,14 +111,10 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
 
       <div>
         <h3 className="text-md font-medium mb-4">Export Options</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <Button variant="secondary" onClick={() => handleExport('JPG')}>
+        <div className="grid grid-cols-1 gap-4">
+          <Button variant="secondary" onClick={handleExport}>
             <Download className="mr-2 h-4 w-4" />
             Export as JPG
-          </Button>
-          <Button variant="secondary" onClick={() => handleExport('PDF')}>
-            <Download className="mr-2 h-4 w-4" />
-            Export as PDF
           </Button>
         </div>
       </div>
