@@ -3,3 +3,4 @@ config();
 
 import '@/ai/flows/extract-and-summarize-text.ts';
 import '@/ai/flows/enhance-scan-quality-with-llm.ts';
+import '@/ai/flows/straighten-document-flow.ts';

@@ -11,7 +11,7 @@ import { ProcessingTools } from '@/components/page-edge/ProcessingTools';
 import { OcrResults } from '@/components/page-edge/OcrResults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { enhanceScan, extractTextFromImage } from '@/app/actions';
+import { enhanceScan, extractTextFromImage, straightenImage } from '@/app/actions';
 import type { EnhancementResult, OcrResult, CropBox } from '@/lib/types';
 
 export default function PageEdgeHome() {
@@ -19,7 +19,7 @@ export default function PageEdgeHome() {
   const [originalImageDataUri, setOriginalImageDataUri] = useState<string | null>(null);
   const [ocrResult, setOcrResult] = useState<OcrResult | null>(null);
   const [enhancementResult, setEnhancementResult] = useState<EnhancementResult | null>(null);
-  const [isLoading, setIsLoading] = useState({ ocr: false, enhance: false });
+  const [isLoading, setIsLoading] = useState({ ocr: false, enhance: false, straighten: false });
   const [cropBox, setCropBox] = useState<CropBox>({ top: 10, right: 10, bottom: 10, left: 10 });
   const { toast } = useToast();
 
@@ -80,6 +80,26 @@ export default function PageEdgeHome() {
       });
     }
     setIsLoading(prev => ({ ...prev, ocr: false }));
+  };
+  
+  const handleStraighten = async () => {
+    if (!imageDataUri) return;
+    setIsLoading(prev => ({...prev, straighten: true}));
+    const result = await straightenImage(imageDataUri);
+    if (result.success && result.data.straightenedImageUri) {
+      setImageDataUri(result.data.straightenedImageUri);
+      toast({
+        title: 'Image Straightened',
+        description: 'The document has been straightened and cleaned.',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Straighten Failed',
+        description: result.error,
+      });
+    }
+    setIsLoading(prev => ({...prev, straighten: false}));
   };
 
   const handleCropBoxChange = (newCropBox: CropBox) => {
@@ -178,6 +198,8 @@ export default function PageEdgeHome() {
                         cropBox={cropBox}
                         onCropBoxChange={handleCropBoxChange}
                         onCropBoxApply={() => handleCropBoxApply()}
+                        onStraighten={handleStraighten}
+                        isStraightening={isLoading.straighten}
                       />
                     </TabsContent>
                     <TabsContent value="ocr" className="mt-6">
