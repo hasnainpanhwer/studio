@@ -37,7 +37,9 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
   const [formatting, setFormatting] = useState<FormattingOptions>({
     fontFamily: 'Times New Roman',
     fontSize: 12,
-    alignment: 'left'
+    alignment: 'left',
+    sindhiFont: 'MB Lateefi',
+    urduFont: 'Jameel Noori Nastaleeq',
   });
 
   const [docxPacker, setDocxPacker] = useState<typeof PackerType | null>(null);
@@ -107,7 +109,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
               children: [
                 new TextRun({
                   text: translationResult.translation1,
-                  font: "MB Lateefi",
+                  font: formatting.sindhiFont,
                   size: 28, // 14pt
                   rightToLeft: true,
                 }),
@@ -123,6 +125,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
               children: [
                 new TextRun({
                   text: translationResult.translation2,
+                  font: formatting.urduFont,
                   size: 24, // 12pt
                   rightToLeft: true,
                 }),
@@ -270,7 +273,6 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                               <SelectItem value="Times New Roman">Times New Roman</SelectItem>
                               <SelectItem value="Arial">Arial</SelectItem>
                               <SelectItem value="Courier New">Courier New</SelectItem>
-                              <SelectItem value="MB Lateefi">MB Lateefi</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -300,6 +302,37 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                           <ToggleGroupItem value="justify" aria-label="Align justify"><AlignJustify className="h-4 w-4" /></ToggleGroupItem>
                         </ToggleGroup>
                       </div>
+                      <Separator />
+                       <div className="space-y-2">
+                          <Label>Sindhi Font</Label>
+                          <Select
+                            value={formatting.sindhiFont}
+                            onValueChange={(value) => setFormatting(f => ({ ...f, sindhiFont: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Sindhi font" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="MB Lateefi">MB Lateefi</SelectItem>
+                              <SelectItem value="Arial">Arial</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Urdu Font</Label>
+                          <Select
+                            value={formatting.urduFont}
+                            onValueChange={(value) => setFormatting(f => ({ ...f, urduFont: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Urdu font" />
+                            </SelectTrigger>
+                            <SelectContent>
+                               <SelectItem value="Jameel Noori Nastaleeq">Jameel Noori Nastaleeq</SelectItem>
+                               <SelectItem value="Arial">Arial</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                     </div>
                 </AccordionContent>
               </AccordionItem>
@@ -366,3 +399,5 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       )}
     </div>
   );
+
+    

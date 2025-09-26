@@ -17,6 +17,8 @@ export interface FormattingOptions {
   fontFamily: string;
   fontSize: number;
   alignment: 'left' | 'center' | 'right' | 'justify';
+  sindhiFont: string;
+  urduFont: string;
 }
 
 export interface Page {
@@ -28,3 +30,5 @@ export interface Page {
     translationResult: TranslationResult | null;
     cropBox: CropBox;
 }
+
+    
