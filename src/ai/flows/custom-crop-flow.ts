@@ -36,6 +36,8 @@ const prompt = ai.definePrompt({
   output: {schema: CustomCropOutputSchema},
   prompt: `You are an expert at interpreting image cropping commands. The user will provide a command to crop an image. Your task is to extract the cropping values in pixels for top, right, bottom, and left.
 
+The command can be in English, Sindhi, Urdu, Roman Sindhi, or Roman Urdu. You must understand the command regardless of the language.
+
 If a side is not mentioned, its crop value should be 0.
 
 User command: "{{command}}"
