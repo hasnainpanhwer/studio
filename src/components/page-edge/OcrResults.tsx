@@ -1,6 +1,6 @@
 'use client';
 
-import { ScanText, Loader2, Languages, Download, BookCopy, FileUp, CaseSensitive, Pilcrow, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
+import { ScanText, Loader2, Languages, Download, BookCopy, FileUp, CaseSensitive, Pilcrow, AlignLeft, AlignCenter, AlignRight, AlignJustify, FileText as FileTextIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -11,7 +11,7 @@ import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import type { Packer as PackerType, AlignmentType } from 'docx';
+import type { Packer as PackerType, AlignmentType, PageSize } from 'docx';
 import type { saveAs as saveAsType } from 'file-saver';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -40,6 +40,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     alignment: 'left',
     sindhiFont: 'MB Lateefi',
     urduFont: 'Jameel Noori Nastaleeq',
+    pageSize: 'A4',
   });
 
   const [docxPacker, setDocxPacker] = useState<typeof PackerType | null>(null);
@@ -55,7 +56,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     if (!ocrResult || !docxPacker || !fileSaver) return;
 
     // We need to dynamically import these as well to use their types.
-    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx');
+    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, PageSize } = await import('docx');
 
     const { saveAs } = fileSaver;
     
@@ -70,6 +71,13 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
 
     const doc = new Document({
       sections: [{
+        properties: {
+            pageSize: {
+                width: PageSize[formatting.pageSize as keyof typeof PageSize].width,
+                height: PageSize[formatting.pageSize as keyof typeof PageSize].height,
+                orientation: PageSize[formatting.pageSize as keyof typeof PageSize].orientation,
+            },
+        },
         children: [
           new Paragraph({
             text: "PageEdge Export",
@@ -259,6 +267,22 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                 <AccordionContent>
                     <div className="space-y-4 pt-4">
                       <p className="text-sm text-muted-foreground">These settings will be applied to the exported Word document.</p>
+                       <div className="space-y-2">
+                          <Label>Page Size</Label>
+                          <Select
+                            value={formatting.pageSize}
+                            onValueChange={(value) => setFormatting(f => ({ ...f, pageSize: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select page size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="A4">A4</SelectItem>
+                              <SelectItem value="LETTER">Letter</SelectItem>
+                              <SelectItem value="LEGAL">Legal</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>Font Family</Label>
@@ -273,37 +297,21 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                               <SelectItem value="Times New Roman">Times New Roman</SelectItem>
                               <SelectItem value="Arial">Arial</SelectItem>
                               <SelectItem value="Courier New">Courier New</SelectItem>
+                              <SelectItem value="Calibri">Calibri</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="font-size">Font Size (pt)</Label>
-                          <Input
-                            id="font-size"
-                            type="number"
+                          <Label>Font Size</Label>
+                          <Input 
+                            type="number" 
                             value={formatting.fontSize}
                             onChange={(e) => setFormatting(f => ({ ...f, fontSize: parseInt(e.target.value, 10) || 12 }))}
                           />
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label>Text Alignment</Label>
-                        <ToggleGroup 
-                          type="single" 
-                          value={formatting.alignment}
-                          onValueChange={(value: FormattingOptions['alignment']) => {
-                            if (value) setFormatting(f => ({ ...f, alignment: value }))
-                          }}
-                          className="w-full justify-start"
-                        >
-                          <ToggleGroupItem value="left" aria-label="Align left"><AlignLeft className="h-4 w-4" /></ToggleGroupItem>
-                          <ToggleGroupItem value="center" aria-label="Align center"><AlignCenter className="h-4 w-4" /></ToggleGroupItem>
-                          <ToggleGroupItem value="right" aria-label="Align right"><AlignRight className="h-4 w-4" /></ToggleGroupItem>
-                          <ToggleGroupItem value="justify" aria-label="Align justify"><AlignJustify className="h-4 w-4" /></ToggleGroupItem>
-                        </ToggleGroup>
-                      </div>
-                      <Separator />
-                       <div className="space-y-2">
+                       <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
                           <Label>Sindhi Font</Label>
                           <Select
                             value={formatting.sindhiFont}
@@ -314,7 +322,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="MB Lateefi">MB Lateefi</SelectItem>
-                              <SelectItem value="Arial">Arial</SelectItem>
+                              {/* Add other Sindhi fonts here */}
                             </SelectContent>
                           </Select>
                         </div>
@@ -328,76 +336,86 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                               <SelectValue placeholder="Select Urdu font" />
                             </SelectTrigger>
                             <SelectContent>
-                               <SelectItem value="Jameel Noori Nastaleeq">Jameel Noori Nastaleeq</SelectItem>
-                               <SelectItem value="Arial">Arial</SelectItem>
+                              <SelectItem value="Jameel Noori Nastaleeq">Jameel Noori Nastaleeq</SelectItem>
+                               <SelectItem value="Alvi Nastaleeq">Alvi Nastaleeq</SelectItem>
+                              {/* Add other Urdu fonts here */}
                             </SelectContent>
                           </Select>
                         </div>
+                      </div>
+                       <div>
+                          <Label>Text Alignment</Label>
+                           <ToggleGroup 
+                              type="single"
+                              variant="outline" 
+                              className="justify-start mt-2"
+                              value={formatting.alignment}
+                              onValueChange={(value: 'left' | 'center' | 'right' | 'justify') => {
+                                if (value) setFormatting(f => ({ ...f, alignment: value }))
+                              }}
+                            >
+                              <ToggleGroupItem value="left" aria-label="Align left"><AlignLeft className="h-4 w-4" /></ToggleGroupItem>
+                              <ToggleGroupItem value="center" aria-label="Align center"><AlignCenter className="h-4 w-4" /></ToggleGroupItem>
+                              <ToggleGroupItem value="right" aria-label="Align right"><AlignRight className="h-4 w-4" /></ToggleGroupItem>
+                              <ToggleGroupItem value="justify" aria-label="Align justify"><AlignJustify className="h-4 w-4" /></ToggleGroupItem>
+                            </ToggleGroup>
+                       </div>
                     </div>
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
 
+
           <Separator />
+          
+          <Button onClick={onTranslate} disabled={!ocrResult || isTranslating} className="w-full">
+            {isTranslating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Languages className="mr-2 h-4 w-4" />
+            )}
+            Translate Summary
+          </Button>
 
-          <div className="grid grid-cols-2 gap-2">
-             <Button onClick={onTranslate} disabled={isTranslating || !ocrResult.summary} className="w-full">
-              {isTranslating ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Languages className="mr-2 h-4 w-4" />
-              )}
-              Translate Summary
-            </Button>
-            <Button onClick={handleExportWord} disabled={!canExport} variant="secondary" className="w-full">
-                <Download className="mr-2 h-4 w-4" />
-                Export as Word
-            </Button>
-          </div>
-
-          {(isTranslating || translationResult) && (
+          {isTranslating && (
             <div className="space-y-4 mt-4">
-              {isTranslating && (
-                <>
-                  <div className='space-y-2'>
-                    <Label>Sindhi Translate</Label>
-                    <Skeleton className="h-24 w-full" />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label>Urdu</Label>
-                    <Skeleton className="h-24 w-full" />
-                  </div>
-                </>
-              )}
-              {translationResult && (
-                <>
-                  <div>
-                    <Label htmlFor="sindhi-translation" className="mb-2 block">Sindhi Translate</Label>
-                    <Textarea
-                      id="sindhi-translation"
-                      readOnly
-                      value={translationResult.translation1 || "No Sindhi translation."}
-                      className="h-24 font-sindhi text-lg"
-                      dir="rtl"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="urdu-translation" className="mb-2 block">Urdu</Label>
-                    <Textarea
-                      id="urdu-translation"
-                      readOnly
-                      value={translationResult.translation2 || "No Urdu translation."}
-                      className="h-24"
-                      dir="rtl"
-                    />
-                  </div>
-                </>
-              )}
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
             </div>
           )}
+
+          {translationResult && (
+            <div className="space-y-4 mt-4">
+              <div>
+                <Label htmlFor="translation-sindhi" className="mb-2 block font-sindhi">سنڌي ترجمو</Label>
+                <Textarea
+                  id="translation-sindhi"
+                  readOnly
+                  value={translationResult.translation1}
+                  className="h-28 text-right font-sindhi text-lg"
+                  dir="rtl"
+                />
+              </div>
+              <div>
+                <Label htmlFor="translation-urdu" className="mb-2 block" style={{ fontFamily: 'Jameel Noori Nastaleeq' }}>اردو ترجمہ</Label>
+                <Textarea
+                  id="translation-urdu"
+                  readOnly
+                  value={translationResult.translation2}
+                  className="h-28 text-right"
+                  style={{ fontFamily: 'Jameel Noori Nastaleeq', fontSize: '1.2rem' }}
+                  dir="rtl"
+                />
+              </div>
+            </div>
+          )}
+
+           <Button onClick={handleExportWord} disabled={!canExport} variant="secondary" className="w-full">
+            <Download className="mr-2 h-4 w-4" />
+            Export as Word (.docx)
+          </Button>
         </div>
       )}
     </div>
   );
-
-    
+}
