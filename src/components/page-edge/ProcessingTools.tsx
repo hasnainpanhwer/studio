@@ -160,15 +160,21 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
       
       <Separator />
 
-      <div>
-        <h3 className="text-md font-medium mb-4">Export Options</h3>
-        <div className="grid grid-cols-1 gap-4">
-          <Button variant="secondary" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
-            Export as JPG
-          </Button>
-        </div>
-      </div>
+       <Accordion type="single" collapsible className="w-full">
+        <AccordionItem value="export-options" className="border-b-0">
+          <AccordionTrigger className="flex w-full items-center justify-between text-md font-medium hover:no-underline py-0">
+            Export Options
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="grid grid-cols-1 gap-4 pt-6">
+              <Button variant="secondary" onClick={handleExport}>
+                <Download className="mr-2 h-4 w-4" />
+                Export as JPG
+              </Button>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }
