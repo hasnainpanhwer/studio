@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, type DragEvent, type ChangeEvent } from 'react';
-import { UploadCloud } from 'lucide-react';
+import { UploadCloud, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -9,9 +9,10 @@ import Image from 'next/image';
 
 interface UploadPanelProps {
   onImageUpload: (files: File[]) => void;
+  isInitialState: boolean;
 }
 
-export function UploadPanel({ onImageUpload }: UploadPanelProps) {
+export function UploadPanel({ onImageUpload, isInitialState }: UploadPanelProps) {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const placeholder = PlaceHolderImages.find(p => p.id === 'upload-placeholder');
@@ -52,6 +53,26 @@ export function UploadPanel({ onImageUpload }: UploadPanelProps) {
         fileInputRef.current.value = '';
     }
   };
+
+  if (!isInitialState) {
+    return (
+      <div
+        className={cn(
+          'relative group w-full aspect-[3/4] max-h-[80vh] rounded-lg border-2 border-dashed border-muted-foreground/50 transition-all duration-300 flex flex-col items-center justify-center text-center p-8'
+        )}
+      >
+        <div className="z-10 flex flex-col items-center gap-4">
+          <BookOpen className="w-16 h-16 text-muted-foreground" />
+          <h2 className="text-2xl font-bold font-headline text-foreground">
+            Select a Page
+          </h2>
+          <p className="text-muted-foreground">
+            Choose a page from the left sidebar to start editing.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

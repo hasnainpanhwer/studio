@@ -300,6 +300,7 @@ export default function PageEdgeHome() {
           onSelectPage={setActivePageIndex}
           onAddNewPage={handleAddNewPage}
           onDeletePage={handleDeletePage}
+          onImageUpload={handleImageUpload}
         />
         <div className="flex-1 p-4 md:p-8">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 max-w-7xl mx-auto">
@@ -312,7 +313,7 @@ export default function PageEdgeHome() {
                   originalImageAvailable={!!activePage.originalImageDataUri && activePage.imageDataUri !== activePage.originalImageDataUri}
                 />
               ) : (
-                <UploadPanel onImageUpload={handleImageUpload} />
+                <UploadPanel onImageUpload={handleImageUpload} isInitialState={pages.length === 0} />
               )}
             </div>
 

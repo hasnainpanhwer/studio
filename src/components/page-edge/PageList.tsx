@@ -1,11 +1,13 @@
 'use client';
 
 import Image from 'next/image';
-import { Plus, XCircle } from 'lucide-react';
+import { Plus, XCircle, UploadCloud } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Page } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useRef, type ChangeEvent } from 'react';
+import { Input } from '../ui/input';
 
 interface PageListProps {
   pages: Page[];
@@ -13,22 +15,52 @@ interface PageListProps {
   onSelectPage: (index: number) => void;
   onAddNewPage: () => void;
   onDeletePage: (index: number) => void;
+  onImageUpload: (files: File[]) => void;
 }
 
-export function PageList({ pages, activePageIndex, onSelectPage, onAddNewPage, onDeletePage }: PageListProps) {
+export function PageList({ pages, activePageIndex, onSelectPage, onAddNewPage, onDeletePage, onImageUpload }: PageListProps) {
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleDelete = (e: React.MouseEvent, index: number) => {
     e.stopPropagation(); // Prevent page selection when deleting
     onDeletePage(index);
   }
 
+  const handleFileSelect = (files: FileList | null) => {
+    if (files && files.length > 0) {
+      onImageUpload(Array.from(files));
+    }
+  };
+
+  const handleClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    handleFileSelect(e.target.files);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
+
+
   return (
     <aside className="w-32 bg-card border-r flex flex-col">
       <div className="p-2">
-        <Button variant="outline" className="w-full" onClick={onAddNewPage}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Page
+        <Button variant="outline" className="w-full h-auto flex-col py-2" onClick={handleClick}>
+          <UploadCloud className="h-5 w-5 mb-1" />
+          <span className="text-xs">Capture or</span>
+          <span className="text-xs font-bold">Upload Pages</span>
         </Button>
+        <Input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleInputChange}
+          multiple
+        />
       </div>
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-2">
