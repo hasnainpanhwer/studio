@@ -67,43 +67,51 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
 
   return (
     <div className="space-y-6">
-      <div>
-        <h3 className="text-md font-medium mb-2">AI Processing</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Use AI to automatically improve your scan.
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-            <Button onClick={onEnhance} disabled={isEnhancing} variant="outline">
-              {isEnhancing ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Wand2 className="mr-2 h-4 w-4" />
+       <Accordion type="single" collapsible className="w-full" defaultValue="ai-processing">
+        <AccordionItem value="ai-processing" className="border-b-0">
+          <AccordionTrigger className="flex w-full items-center justify-between text-md font-medium hover:no-underline py-0">
+            AI Processing
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-6 pt-6">
+              <p className="text-sm text-muted-foreground">
+                Use AI to automatically improve your scan.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                  <Button onClick={onEnhance} disabled={isEnhancing} variant="outline">
+                    {isEnhancing ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Wand2 className="mr-2 h-4 w-4" />
+                    )}
+                    Estimate Borders
+                  </Button>
+                  <Button onClick={onStraighten} disabled={isStraightening}>
+                      {isStraightening ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                          <AlignHorizontalJustifyStart className="mr-2 h-4 w-4" />
+                      )}
+                      Straighten & Clean
+                  </Button>
+              </div>
+              {enhancementResult && (
+                <Alert className="mt-4">
+                  <Wand2 className="h-4 w-4" />
+                  <AlertTitle className="font-headline">AI Suggestions</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc list-inside text-sm mt-2 space-y-1">
+                      <li>{enhancementResult.enhancementSuggestions}</li>
+                      <li>Estimated Border Thickness: {enhancementResult.estimatedBorderThickness.toFixed(2)}px</li>
+                      <li>Estimated Border Darkness: {(enhancementResult.estimatedBorderDarkness * 100).toFixed(0)}%</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
               )}
-              Estimate Borders
-            </Button>
-            <Button onClick={onStraighten} disabled={isStraightening}>
-                {isStraightening ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <AlignHorizontalJustifyStart className="mr-2 h-4 w-4" />
-                )}
-                Straighten & Clean
-            </Button>
-        </div>
-        {enhancementResult && (
-          <Alert className="mt-4">
-            <Wand2 className="h-4 w-4" />
-            <AlertTitle className="font-headline">AI Suggestions</AlertTitle>
-            <AlertDescription>
-              <ul className="list-disc list-inside text-sm mt-2 space-y-1">
-                <li>{enhancementResult.enhancementSuggestions}</li>
-                <li>Estimated Border Thickness: {enhancementResult.estimatedBorderThickness.toFixed(2)}px</li>
-                <li>Estimated Border Darkness: {(enhancementResult.estimatedBorderDarkness * 100).toFixed(0)}%</li>
-              </ul>
-            </AlertDescription>
-          </Alert>
-        )}
-      </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       <Separator />
 
