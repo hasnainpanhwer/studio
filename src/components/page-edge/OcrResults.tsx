@@ -9,7 +9,7 @@ import type { OcrResult, TranslationResult, Page } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -25,17 +25,28 @@ interface OcrResultsProps {
   isBulkOcring: boolean;
 }
 
+type DocxModule = typeof import('docx');
+type FileSaverModule = typeof import('file-saver');
+
 export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslating, translationResult, onBulkOcr, pages, isBulkOcring }: OcrResultsProps) {
   const { toast } = useToast();
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
-  
-  const handleExportWord = async () => {
-    if (!ocrResult) return;
 
-    // Dynamically import client-side libraries
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = await import('docx');
-    const { saveAs } = await import('file-saver');
+  const [docx, setDocx] = useState<DocxModule | null>(null);
+  const [fileSaver, setFileSaver] = useState<FileSaverModule | null>(null);
+
+  useEffect(() => {
+    // Dynamically import client-side libraries only on the client
+    import('docx').then(module => setDocx(module));
+    import('file-saver').then(module => setFileSaver(module));
+  }, []);
+
+  const handleExportWord = async () => {
+    if (!ocrResult || !docx || !fileSaver) return;
+
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = docx;
+    const { saveAs } = fileSaver;
 
     const doc = new Document({
       sections: [{
@@ -78,6 +89,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                   text: translationResult.translation1,
                   font: "MB Lateefi",
                   size: 28, // 14pt
+                  rightToLeft: true,
                 }),
               ],
             }),
@@ -92,6 +104,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                 new TextRun({
                   text: translationResult.translation2,
                   size: 24, // 12pt
+                  rightToLeft: true,
                 }),
               ],
             }),
@@ -119,6 +132,9 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     const pagesToProcess = pages.slice(start - 1, end);
     onBulkOcr(pagesToProcess);
   };
+
+  const canExport = !!docx && !!fileSaver && !!ocrResult;
+
 
   return (
     <div className="space-y-6">
@@ -225,7 +241,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
               )}
               Translate Summary
             </Button>
-            <Button onClick={handleExportWord} disabled={!ocrResult} variant="secondary" className="w-full">
+            <Button onClick={handleExportWord} disabled={!canExport} variant="secondary" className="w-full">
                 <Download className="mr-2 h-4 w-4" />
                 Export as Word
             </Button>
