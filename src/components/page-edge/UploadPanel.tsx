@@ -54,22 +54,44 @@ export function UploadPanel({ onImageUpload, isInitialState }: UploadPanelProps)
     }
   };
 
-  if (!isInitialState) {
+  if (isInitialState) {
     return (
       <div
         className={cn(
-          'relative group w-full aspect-[3/4] max-h-[80vh] rounded-lg border-2 border-dashed border-muted-foreground/50 transition-all duration-300 flex flex-col items-center justify-center text-center p-8'
+          'relative group w-full aspect-[3/4] max-h-[80vh] rounded-lg border-2 border-dashed border-muted-foreground/50 transition-all duration-300 flex flex-col items-center justify-center text-center p-8 cursor-pointer overflow-hidden',
+          isDragging ? 'border-primary bg-accent' : 'hover:border-primary hover:bg-accent/50'
         )}
+        onClick={handleClick}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
-        <div className="z-10 flex flex-col items-center gap-4">
-          <BookOpen className="w-16 h-16 text-muted-foreground" />
+        {placeholder && (
+          <Image
+            src={placeholder.imageUrl}
+            alt={placeholder.description}
+            fill
+            className="object-cover opacity-10 group-hover:opacity-5 transition-opacity duration-300"
+            data-ai-hint={placeholder.imageHint}
+          />
+        )}
+        <div className="z-10 flex flex-col items-center gap-4 transition-transform duration-300 group-hover:scale-105">
+          <UploadCloud className="w-16 h-16 text-muted-foreground group-hover:text-primary" />
           <h2 className="text-2xl font-bold font-headline text-foreground">
-            Select a Page
+            Capture or Upload Pages
           </h2>
           <p className="text-muted-foreground">
-            Choose a page from the left sidebar to start editing.
+            Drag & drop images here, or click to select files.
           </p>
         </div>
+        <Input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleInputChange}
+          multiple
+        />
       </div>
     );
   }
@@ -77,40 +99,18 @@ export function UploadPanel({ onImageUpload, isInitialState }: UploadPanelProps)
   return (
     <div
       className={cn(
-        'relative group w-full aspect-[3/4] max-h-[80vh] rounded-lg border-2 border-dashed border-muted-foreground/50 transition-all duration-300 flex flex-col items-center justify-center text-center p-8 cursor-pointer overflow-hidden',
-        isDragging ? 'border-primary bg-accent' : 'hover:border-primary hover:bg-accent/50'
+        'relative group w-full aspect-[3/4] max-h-[80vh] rounded-lg border-2 border-dashed border-muted-foreground/50 transition-all duration-300 flex flex-col items-center justify-center text-center p-8'
       )}
-      onClick={handleClick}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
     >
-      {placeholder && (
-        <Image
-          src={placeholder.imageUrl}
-          alt={placeholder.description}
-          fill
-          className="object-cover opacity-10 group-hover:opacity-5 transition-opacity duration-300"
-          data-ai-hint={placeholder.imageHint}
-        />
-      )}
-      <div className="z-10 flex flex-col items-center gap-4 transition-transform duration-300 group-hover:scale-105">
-        <UploadCloud className="w-16 h-16 text-muted-foreground group-hover:text-primary" />
+      <div className="z-10 flex flex-col items-center gap-4">
+        <BookOpen className="w-16 h-16 text-muted-foreground" />
         <h2 className="text-2xl font-bold font-headline text-foreground">
-          Capture or Upload Pages
+          Select a Page
         </h2>
         <p className="text-muted-foreground">
-          Drag & drop images here, or click to select files.
+          Choose a page from the left sidebar to start editing.
         </p>
       </div>
-      <Input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleInputChange}
-        multiple
-      />
     </div>
   );
 }
