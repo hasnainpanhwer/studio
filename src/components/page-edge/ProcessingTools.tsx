@@ -123,7 +123,7 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
                       ) : (
                           <AlignHorizontalJustifyStart className="mr-2 h-4 w-4" />
                       )}
-                      Straighten & Clean
+                      Straighten &amp; Clean
                   </Button>
               </div>
               
