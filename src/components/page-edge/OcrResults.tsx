@@ -1,18 +1,21 @@
 'use client';
 
-import { ScanText, Loader2, Languages, Download, BookCopy, FileUp } from 'lucide-react';
+import { ScanText, Loader2, Languages, Download, BookCopy, FileUp, CaseSensitive, Pilcrow, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { OcrResult, TranslationResult, Page } from '@/lib/types';
+import type { OcrResult, TranslationResult, Page, FormattingOptions } from '@/lib/types';
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import type { Packer as PackerType } from 'docx';
+import type { Packer as PackerType, AlignmentType } from 'docx';
 import type { saveAs as saveAsType } from 'file-saver';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
 
 interface OcrResultsProps {
@@ -31,6 +34,11 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
   const { toast } = useToast();
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
+  const [formatting, setFormatting] = useState<FormattingOptions>({
+    fontFamily: 'Times New Roman',
+    fontSize: 12,
+    alignment: 'left'
+  });
 
   const [docxPacker, setDocxPacker] = useState<typeof PackerType | null>(null);
   const [fileSaver, setFileSaver] = useState<{ saveAs: typeof saveAsType } | null>(null);
@@ -45,9 +53,18 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     if (!ocrResult || !docxPacker || !fileSaver) return;
 
     // We need to dynamically import these as well to use their types.
-    const { Document, Paragraph, TextRun, HeadingLevel } = await import('docx');
+    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx');
 
     const { saveAs } = fileSaver;
+    
+    const getAlignment = (align: 'left' | 'center' | 'right' | 'justify') => {
+      switch(align) {
+        case 'center': return AlignmentType.CENTER;
+        case 'right': return AlignmentType.RIGHT;
+        case 'justify': return AlignmentType.JUSTIFIED;
+        default: return AlignmentType.LEFT;
+      }
+    }
 
     const doc = new Document({
       sections: [{
@@ -65,9 +82,11 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
             children: [
               new TextRun({
                 text: ocrResult.extractedText,
-                font: "Times New Roman",
+                font: formatting.fontFamily,
+                size: formatting.fontSize * 2, // docx size is in half-points
               }),
             ],
+            alignment: getAlignment(formatting.alignment),
           }),
           new Paragraph({
             text: "Summary",
@@ -84,7 +103,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
               spacing: { before: 200, after: 100 },
             }),
             new Paragraph({
-              rightToLeft: true,
+              alignment: AlignmentType.RIGHT,
               children: [
                 new TextRun({
                   text: translationResult.translation1,
@@ -100,7 +119,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
               spacing: { before: 200, after: 100 },
             }),
              new Paragraph({
-              rightToLeft: true,
+              alignment: AlignmentType.RIGHT,
               children: [
                 new TextRun({
                   text: translationResult.translation2,
@@ -231,6 +250,61 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
             />
           </div>
 
+           <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="formatting-options">
+                <AccordionTrigger>Formatting Options</AccordionTrigger>
+                <AccordionContent>
+                    <div className="space-y-4 pt-4">
+                      <p className="text-sm text-muted-foreground">These settings will be applied to the exported Word document.</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Font Family</Label>
+                          <Select
+                            value={formatting.fontFamily}
+                            onValueChange={(value) => setFormatting(f => ({ ...f, fontFamily: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select font" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Times New Roman">Times New Roman</SelectItem>
+                              <SelectItem value="Arial">Arial</SelectItem>
+                              <SelectItem value="Courier New">Courier New</SelectItem>
+                              <SelectItem value="MB Lateefi">MB Lateefi</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="font-size">Font Size (pt)</Label>
+                          <Input
+                            id="font-size"
+                            type="number"
+                            value={formatting.fontSize}
+                            onChange={(e) => setFormatting(f => ({ ...f, fontSize: parseInt(e.target.value, 10) || 12 }))}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Text Alignment</Label>
+                        <ToggleGroup 
+                          type="single" 
+                          value={formatting.alignment}
+                          onValueChange={(value: FormattingOptions['alignment']) => {
+                            if (value) setFormatting(f => ({ ...f, alignment: value }))
+                          }}
+                          className="w-full justify-start"
+                        >
+                          <ToggleGroupItem value="left" aria-label="Align left"><AlignLeft className="h-4 w-4" /></ToggleGroupItem>
+                          <ToggleGroupItem value="center" aria-label="Align center"><AlignCenter className="h-4 w-4" /></ToggleGroupItem>
+                          <ToggleGroupItem value="right" aria-label="Align right"><AlignRight className="h-4 w-4" /></ToggleGroupItem>
+                          <ToggleGroupItem value="justify" aria-label="Align justify"><AlignJustify className="h-4 w-4" /></ToggleGroupItem>
+                        </ToggleGroup>
+                      </div>
+                    </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+
           <Separator />
 
           <div className="grid grid-cols-2 gap-2">
@@ -292,4 +366,3 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       )}
     </div>
   );
-}

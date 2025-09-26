@@ -13,6 +13,12 @@ export type CropBox = {
     left: number;
 };
 
+export interface FormattingOptions {
+  fontFamily: string;
+  fontSize: number;
+  alignment: 'left' | 'center' | 'right' | 'justify';
+}
+
 export interface Page {
     id: string;
     imageDataUri: string | null;
