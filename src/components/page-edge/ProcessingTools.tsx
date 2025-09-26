@@ -130,12 +130,12 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
             <Slider id="crop-top" value={[getConvertedValue(cropBox.top)]} onValueChange={handleSliderChange('top')} max={conversion.max} step={conversion.step} />
           </div>
           <div className="grid gap-2">
-            <div className='flex justify-between'><Label htmlFor="crop-right">Crop Right</Label><span className="text-sm text-muted-foreground">{getConvertedValue(cropBox.right)} {unit}</span></div>
-            <Slider id="crop-right" value={[getConvertedValue(cropBox.right)]} onValueChange={handleSliderChange('right')} max={conversion.max} step={conversion.step} />
-          </div>
-          <div className="grid gap-2">
             <div className='flex justify-between'><Label htmlFor="crop-bottom">Crop Bottom</Label><span className="text-sm text-muted-foreground">{getConvertedValue(cropBox.bottom)} {unit}</span></div>
             <Slider id="crop-bottom" value={[getConvertedValue(cropBox.bottom)]} onValueChange={handleSliderChange('bottom')} max={conversion.max} step={conversion.step} />
+          </div>
+          <div className="grid gap-2">
+            <div className='flex justify-between'><Label htmlFor="crop-right">Crop Right</Label><span className="text-sm text-muted-foreground">{getConvertedValue(cropBox.right)} {unit}</span></div>
+            <Slider id="crop-right" value={[getConvertedValue(cropBox.right)]} onValueChange={handleSliderChange('right')} max={conversion.max} step={conversion.step} />
           </div>
           <div className="grid gap-2">
             <div className='flex justify-between'><Label htmlFor="crop-left">Crop Left</Label><span className="text-sm text-muted-foreground">{getConvertedValue(cropBox.left)} {unit}</span></div>
