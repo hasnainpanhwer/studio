@@ -25,23 +25,25 @@ interface ProcessingToolsProps {
   isCustomCropping: boolean;
 }
 
-const DPI = 96;
-const PX_PER_CM = DPI / 2.54;
-
-const CONVERSIONS = {
-  px: { to: (val: number) => val, from: (val: number) => val },
-  in: { to: (val: number) => val / DPI, from: (val: number) => val * DPI },
-  cm: { to: (val: number) => val / PX_PER_CM, from: (val: number) => val * PX_PER_CM },
-};
-
-type Unit = keyof typeof CONVERSIONS;
+type Unit = 'px' | 'in' | 'cm';
 
 export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cropBox, onCropBoxChange, onCropBoxApply, onStraighten, isStraightening, onCustomCrop, isCustomCropping }: ProcessingToolsProps) {
   const { toast } = useToast();
   const [unit, setUnit] = useState<Unit>('px');
   const [customCommand, setCustomCommand] = useState('');
+  const [dpi, setDpi] = useState(96);
 
-  const conversion = CONVERSIONS[unit];
+  const getConversions = (currentDpi: number) => {
+    const pxPerCm = currentDpi / 2.54;
+    return {
+        px: { to: (val: number) => val, from: (val: number) => val },
+        in: { to: (val: number) => val / currentDpi, from: (val: number) => val * currentDpi },
+        cm: { to: (val: number) => val / pxPerCm, from: (val: number) => val * pxPerCm },
+    };
+  };
+
+  const conversions = getConversions(dpi);
+  const conversion = conversions[unit];
 
   const handleInputChange = (id: keyof CropBox) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const valueInUnit = parseFloat(e.target.value);
@@ -83,7 +85,6 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
 
   const getConvertedValue = (pixelValue: number) => {
       const val = conversion.to(pixelValue);
-      // return a string with 2 decimal places if it's a float, otherwise return the integer
       return val % 1 !== 0 ? val.toFixed(2) : val.toString();
   }
 
@@ -171,22 +172,34 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
           </AccordionTrigger>
           <AccordionContent>
             <div className="space-y-6 pt-6">
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground">Units</p>
-                <RadioGroup defaultValue="px" onValueChange={(val: Unit) => handleUnitChange(val)} className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="px" id="r-px" />
-                    <Label htmlFor="r-px">px</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="in" id="r-in" />
-                    <Label htmlFor="r-in">in</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cm" id="r-cm" />
-                    <Label htmlFor="r-cm">cm</Label>
-                  </div>
-                </RadioGroup>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm text-muted-foreground">Units</Label>
+                  <RadioGroup value={unit} onValueChange={(val: Unit) => handleUnitChange(val)} className="flex items-center space-x-4 mt-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="px" id="r-px" />
+                      <Label htmlFor="r-px">px</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="in" id="r-in" />
+                      <Label htmlFor="r-in">in</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="cm" id="r-cm" />
+                      <Label htmlFor="r-cm">cm</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                 <div>
+                    <Label htmlFor="dpi-input" className="text-sm text-muted-foreground">Image DPI</Label>
+                    <Input 
+                      id="dpi-input" 
+                      type="number" 
+                      value={dpi} 
+                      onChange={(e) => setDpi(parseInt(e.target.value, 10) || 96)} 
+                      className="mt-1"
+                    />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
