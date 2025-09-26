@@ -10,7 +10,6 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
-import * as fs from 'fs';
 
 const ExtractAndSummarizeTextInputSchema = z.object({
   photoDataUri: z
