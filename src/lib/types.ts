@@ -19,6 +19,7 @@ export interface FormattingOptions {
   alignment: 'left' | 'center' | 'right' | 'justify';
   sindhiFont: string;
   urduFont: string;
+  pageSize: string;
 }
 
 export interface Page {

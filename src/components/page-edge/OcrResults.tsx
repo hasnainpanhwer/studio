@@ -11,7 +11,7 @@ import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import type { Packer as PackerType, AlignmentType, PageSize } from 'docx';
+import type { Packer as PackerType, PageSize as PageSizeType, AlignmentType } from 'docx';
 import type { saveAs as saveAsType } from 'file-saver';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -45,18 +45,23 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
 
   const [docxPacker, setDocxPacker] = useState<typeof PackerType | null>(null);
   const [fileSaver, setFileSaver] = useState<{ saveAs: typeof saveAsType } | null>(null);
+  const [docx, setDocx] = useState<{ PageSize: typeof PageSizeType } | null>(null);
+
 
   useEffect(() => {
     // Dynamically import client-side libraries only on the client
-    import('docx').then(module => setDocxPacker(() => module.Packer));
+    import('docx').then(module => {
+        setDocxPacker(() => module.Packer);
+        setDocx({ PageSize: module.PageSize });
+    });
     import('file-saver').then(module => setFileSaver({ saveAs: module.saveAs }));
   }, []);
 
   const handleExportWord = async () => {
-    if (!ocrResult || !docxPacker || !fileSaver) return;
+    if (!ocrResult || !docxPacker || !fileSaver || !docx) return;
 
     // We need to dynamically import these as well to use their types.
-    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, PageSize } = await import('docx');
+    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx');
 
     const { saveAs } = fileSaver;
     
@@ -68,14 +73,16 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
         default: return AlignmentType.LEFT;
       }
     }
+    
+    const selectedPageSize = docx.PageSize[formatting.pageSize as keyof typeof docx.PageSize];
 
     const doc = new Document({
       sections: [{
         properties: {
             pageSize: {
-                width: PageSize[formatting.pageSize as keyof typeof PageSize].width,
-                height: PageSize[formatting.pageSize as keyof typeof PageSize].height,
-                orientation: PageSize[formatting.pageSize as keyof typeof PageSize].orientation,
+                width: selectedPageSize.width,
+                height: selectedPageSize.height,
+                orientation: selectedPageSize.orientation,
             },
         },
         children: [
@@ -164,7 +171,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     onBulkOcr(pagesToProcess);
   };
 
-  const canExport = !!docxPacker && !!fileSaver && !!ocrResult;
+  const canExport = !!docxPacker && !!fileSaver && !!ocrResult && !!docx;
 
 
   return (
@@ -280,6 +287,9 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                               <SelectItem value="A4">A4</SelectItem>
                               <SelectItem value="LETTER">Letter</SelectItem>
                               <SelectItem value="LEGAL">Legal</SelectItem>
+                              <SelectItem value="A5">A5 (Book)</SelectItem>
+                              <SelectItem value="A6">A6 (Pocket Book)</SelectItem>
+                              <SelectItem value="EXECUTIVE">Executive (7.25" x 10.5")</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
