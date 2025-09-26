@@ -11,6 +11,8 @@ import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import type { Packer as PackerType } from 'docx';
+import type { saveAs as saveAsType } from 'file-saver';
 
 
 interface OcrResultsProps {
@@ -25,27 +27,26 @@ interface OcrResultsProps {
   isBulkOcring: boolean;
 }
 
-type DocxModule = typeof import('docx');
-type FileSaverModule = typeof import('file-saver');
-
 export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslating, translationResult, onBulkOcr, pages, isBulkOcring }: OcrResultsProps) {
   const { toast } = useToast();
   const [rangeStart, setRangeStart] = useState('');
   const [rangeEnd, setRangeEnd] = useState('');
 
-  const [docx, setDocx] = useState<DocxModule | null>(null);
-  const [fileSaver, setFileSaver] = useState<FileSaverModule | null>(null);
+  const [docxPacker, setDocxPacker] = useState<typeof PackerType | null>(null);
+  const [fileSaver, setFileSaver] = useState<{ saveAs: typeof saveAsType } | null>(null);
 
   useEffect(() => {
     // Dynamically import client-side libraries only on the client
-    import('docx').then(module => setDocx(module));
-    import('file-saver').then(module => setFileSaver(module));
+    import('docx').then(module => setDocxPacker(() => module.Packer));
+    import('file-saver').then(module => setFileSaver({ saveAs: module.saveAs }));
   }, []);
 
   const handleExportWord = async () => {
-    if (!ocrResult || !docx || !fileSaver) return;
+    if (!ocrResult || !docxPacker || !fileSaver) return;
 
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = docx;
+    // We need to dynamically import these as well to use their types.
+    const { Document, Paragraph, TextRun, HeadingLevel } = await import('docx');
+
     const { saveAs } = fileSaver;
 
     const doc = new Document({
@@ -113,7 +114,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       }],
     });
 
-    Packer.toBlob(doc).then(blob => {
+    docxPacker.toBlob(doc).then(blob => {
       saveAs(blob, 'PageEdge-Export.docx');
     });
   };
@@ -133,7 +134,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     onBulkOcr(pagesToProcess);
   };
 
-  const canExport = !!docx && !!fileSaver && !!ocrResult;
+  const canExport = !!docxPacker && !!fileSaver && !!ocrResult;
 
 
   return (
