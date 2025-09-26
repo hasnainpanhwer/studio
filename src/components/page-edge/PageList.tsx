@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Plus, XCircle, UploadCloud } from 'lucide-react';
+import { XCircle, UploadCloud } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Page } from '@/lib/types';
 import { Button } from '@/components/ui/button';

@@ -4,6 +4,7 @@ import { enhanceScanQualityWithLLM } from '@/ai/flows/enhance-scan-quality-with-
 import { extractAndSummarizeText } from '@/ai/flows/extract-and-summarize-text';
 import { straightenDocument } from '@/ai/flows/straighten-document-flow';
 import { translateText } from '@/ai/flows/translate-text-flow';
+import { customCrop } from '@/ai/flows/custom-crop-flow';
 
 
 type ActionResult<T> = { success: true; data: T } | { success: false; error: string };
@@ -57,5 +58,18 @@ export async function getTranslations(textToTranslate: string): Promise<ActionRe
     } catch (error) {
         console.error('Error translating text:', error);
         return { success: false, error: 'An unexpected error occurred during translation.' };
+    }
+}
+
+export async function getCustomCrop(command: string): Promise<ActionResult<Awaited<ReturnType<typeof customCrop>>>> {
+    if (!command) {
+        return { success: false, error: 'No command provided for cropping.' };
+    }
+    try {
+        const result = await customCrop({ command });
+        return { success: true, data: result };
+    } catch (error) {
+        console.error('Error with custom crop:', error);
+        return { success: false, error: 'An unexpected error occurred during custom crop.' };
     }
 }

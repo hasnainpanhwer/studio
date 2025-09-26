@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Wand2, Download, Loader2, Check, AlignHorizontalJustifyStart, ChevronDown } from 'lucide-react';
+import { Wand2, Download, Loader2, Check, AlignHorizontalJustifyStart, Crop, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface ProcessingToolsProps {
-  onEnhance: () => void;
+  onEnhance: (applyCrop?: boolean) => void;
   enhancementResult: EnhancementResult | null;
   isEnhancing: boolean;
   cropBox: CropBox;
@@ -21,6 +21,8 @@ interface ProcessingToolsProps {
   onCropBoxApply: () => void;
   onStraighten: () => void;
   isStraightening: boolean;
+  onCustomCrop: (command: string) => void;
+  isCustomCropping: boolean;
 }
 
 const DPI = 96;
@@ -34,9 +36,10 @@ const CONVERSIONS = {
 
 type Unit = keyof typeof CONVERSIONS;
 
-export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cropBox, onCropBoxChange, onCropBoxApply, onStraighten, isStraightening }: ProcessingToolsProps) {
+export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cropBox, onCropBoxChange, onCropBoxApply, onStraighten, isStraightening, onCustomCrop, isCustomCropping }: ProcessingToolsProps) {
   const { toast } = useToast();
   const [unit, setUnit] = useState<Unit>('px');
+  const [customCommand, setCustomCommand] = useState('');
 
   const conversion = CONVERSIONS[unit];
 
@@ -65,6 +68,19 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
     onCropBoxApply();
   }
   
+  const handleCustomCommandSubmit = () => {
+    if (!customCommand.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Empty Command',
+        description: 'Please enter a crop command.',
+      });
+      return;
+    }
+    onCustomCrop(customCommand);
+    setCustomCommand('');
+  };
+
   const getConvertedValue = (pixelValue: number) => {
       const val = conversion.to(pixelValue);
       // return a string with 2 decimal places if it's a float, otherwise return the integer
@@ -84,7 +100,7 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
                 Use AI to automatically improve your scan.
               </p>
               <div className="grid grid-cols-2 gap-2">
-                  <Button onClick={onEnhance} disabled={isEnhancing} variant="outline">
+                  <Button onClick={() => onEnhance(false)} disabled={isEnhancing} variant="outline">
                     {isEnhancing ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
@@ -92,7 +108,15 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
                     )}
                     Estimate Borders
                   </Button>
-                  <Button onClick={onStraighten} disabled={isStraightening}>
+                  <Button onClick={() => onEnhance(true)} disabled={isEnhancing}>
+                      {isEnhancing ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                          <Crop className="mr-2 h-4 w-4" />
+                      )}
+                      Auto Crop
+                  </Button>
+                  <Button onClick={onStraighten} disabled={isStraightening} className="col-span-2">
                       {isStraightening ? (
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
@@ -101,6 +125,25 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
                       Straighten & Clean
                   </Button>
               </div>
+              
+              <Separator/>
+
+              <div>
+                <Label htmlFor="custom-command" className="mb-2 block">Custom Command</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    id="custom-command" 
+                    placeholder='e.g., "crop 20px from top"' 
+                    value={customCommand}
+                    onChange={(e) => setCustomCommand(e.target.value)}
+                    disabled={isCustomCropping}
+                  />
+                  <Button onClick={handleCustomCommandSubmit} disabled={isCustomCropping} size="icon" aria-label="Submit Custom Command">
+                    {isCustomCropping ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
               {enhancementResult && (
                 <Alert className="mt-4">
                   <Wand2 className="h-4 w-4" />

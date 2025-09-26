@@ -10,7 +10,7 @@ import { ProcessingTools } from '@/components/page-edge/ProcessingTools';
 import { OcrResults } from '@/components/page-edge/OcrResults';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { enhanceScan, extractTextFromImage, straightenImage, getTranslations } from '@/app/actions';
+import { enhanceScan, extractTextFromImage, straightenImage, getTranslations, getCustomCrop } from '@/app/actions';
 import type { EnhancementResult, OcrResult, CropBox, TranslationResult, Page } from '@/lib/types';
 import { PageList } from '@/components/page-edge/PageList';
 
@@ -18,7 +18,7 @@ export default function PageEdgeHome() {
   const [pages, setPages] = useState<Page[]>([]);
   const [activePageIndex, setActivePageIndex] = useState<number | null>(null);
 
-  const [isLoading, setIsLoading] = useState({ ocr: false, enhance: false, straighten: false, translate: false });
+  const [isLoading, setIsLoading] = useState({ ocr: false, enhance: false, straighten: false, translate: false, customCrop: false });
   const { toast } = useToast();
 
   const activePage = activePageIndex !== null ? pages[activePageIndex] : null;
@@ -51,7 +51,7 @@ export default function PageEdgeHome() {
             ocrResult: null,
             enhancementResult: null,
             translationResult: null,
-            cropBox: { top: 10, right: 10, bottom: 10, left: 10 },
+            cropBox: { top: 0, right: 0, bottom: 0, left: 0 },
           });
         };
         reader.onerror = reject;
@@ -101,7 +101,7 @@ export default function PageEdgeHome() {
   };
 
 
-  const handleEnhance = async () => {
+  const handleEnhance = async (applyCrop = false) => {
     if (!activePage?.originalImageDataUri) return;
     setIsLoading(prev => ({ ...prev, enhance: true }));
     updateActivePage({ enhancementResult: null });
@@ -115,11 +115,19 @@ export default function PageEdgeHome() {
         left: result.data.estimatedBorderThickness,
       };
       updateActivePage({ enhancementResult: result.data, cropBox: newCropBox });
-      handleCropBoxApply(newCropBox, true);
-       toast({
-        title: 'AI Enhancement Applied',
-        description: 'The AI-suggested crop has been applied to the preview.',
-      });
+      
+      if (applyCrop) {
+        handleCropBoxApply(newCropBox, true);
+        toast({
+            title: 'AI Auto Crop Applied',
+            description: 'The image has been automatically cropped.',
+        });
+      } else {
+        toast({
+            title: 'AI Borders Estimated',
+            description: 'The suggested crop area is shown with a dashed line.',
+        });
+      }
     } else {
       toast({
         variant: 'destructive',
@@ -219,7 +227,7 @@ export default function PageEdgeHome() {
     setIsLoading(prev => ({...prev, straighten: true}));
     const result = await straightenImage(activePage.imageDataUri);
     if (result.success && result.data.straightenedImageUri) {
-      updateActivePage({ imageDataUri: result.data.straightenedImageUri });
+      updateActivePage({ imageDataUri: result.data.straightenedImageUri, originalImageDataUri: activePage.originalImageDataUri });
       toast({
         title: 'Image Straightened',
         description: 'The document has been straightened and cleaned.',
@@ -233,6 +241,33 @@ export default function PageEdgeHome() {
     }
     setIsLoading(prev => ({...prev, straighten: false}));
   };
+  
+  const handleCustomCrop = async (command: string) => {
+    setIsLoading(prev => ({ ...prev, customCrop: true }));
+    const result = await getCustomCrop(command);
+    if (result.success) {
+      const newCropBox = {
+        top: result.data.top,
+        right: result.data.right,
+        bottom: result.data.bottom,
+        left: result.data.left,
+      };
+      updateActivePage({ cropBox: newCropBox });
+      handleCropBoxApply(newCropBox, true);
+       toast({
+        title: 'Custom Crop Applied',
+        description: 'The crop based on your command has been applied.',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Custom Crop Failed',
+        description: result.error,
+      });
+    }
+    setIsLoading(prev => ({ ...prev, customCrop: false }));
+  };
+
 
   const handleCropBoxChange = (newCropBox: CropBox) => {
     updateActivePage({ cropBox: newCropBox });
@@ -279,7 +314,7 @@ export default function PageEdgeHome() {
     if (!activePage) return;
     updateActivePage({
       imageDataUri: activePage.originalImageDataUri,
-      cropBox: { top: 10, right: 10, bottom: 10, left: 10 },
+      cropBox: { top: 0, right: 0, bottom: 0, left: 0 },
       enhancementResult: null,
       ocrResult: null,
       translationResult: null,
@@ -342,6 +377,8 @@ export default function PageEdgeHome() {
                           onCropBoxApply={() => handleCropBoxApply()}
                           onStraighten={handleStraighten}
                           isStraightening={isLoading.straighten}
+                          onCustomCrop={handleCustomCrop}
+                          isCustomCropping={isLoading.customCrop}
                         />
                       </TabsContent>
                       <TabsContent value="ocr" className="mt-6">
