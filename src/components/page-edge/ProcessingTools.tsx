@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import type { EnhancementResult, CropBox } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface ProcessingToolsProps {
   onEnhance: () => void;
@@ -21,13 +22,32 @@ interface ProcessingToolsProps {
   isStraightening: boolean;
 }
 
+const DPI = 96;
+const PX_PER_CM = DPI / 2.54;
+
+const CONVERSIONS = {
+  px: { to: (val: number) => val, from: (val: number) => val, max: 200, step: 1 },
+  in: { to: (val: number) => val / DPI, from: (val: number) => val * DPI, max: 2, step: 0.1 },
+  cm: { to: (val: number) => val / PX_PER_CM, from: (val: number) => val * PX_PER_CM, max: 5, step: 0.1 },
+};
+
+type Unit = keyof typeof CONVERSIONS;
+
 export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cropBox, onCropBoxChange, onCropBoxApply, onStraighten, isStraightening }: ProcessingToolsProps) {
   const { toast } = useToast();
-  
+  const [unit, setUnit] = useState<Unit>('px');
+
+  const conversion = CONVERSIONS[unit];
+
   const handleSliderChange = (id: keyof CropBox) => (value: number[]) => {
-    onCropBoxChange({ ...cropBox, [id]: value[0] });
+    const pixelValue = conversion.from(value[0]);
+    onCropBoxChange({ ...cropBox, [id]: pixelValue });
   };
   
+  const handleUnitChange = (newUnit: Unit) => {
+    setUnit(newUnit);
+  };
+
   const handleExport = () => {
     toast({
         title: `Exporting JPG`,
@@ -38,6 +58,11 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
   const handleApply = () => {
     onCropBoxApply();
   }
+  
+  const getConvertedValue = (pixelValue: number) => {
+      return Number(conversion.to(pixelValue).toFixed(2));
+  }
+
 
   return (
     <div className="space-y-6">
@@ -82,23 +107,39 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
       <Separator />
 
       <div className="space-y-6">
-        <h3 className="text-md font-medium">Manual Adjustments</h3>
+        <div className="flex justify-between items-center">
+          <h3 className="text-md font-medium">Manual Adjustments</h3>
+          <RadioGroup defaultValue="px" onValueChange={(val: Unit) => handleUnitChange(val)} className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="px" id="r-px" />
+              <Label htmlFor="r-px">px</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="in" id="r-in" />
+              <Label htmlFor="r-in">in</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="cm" id="r-cm" />
+              <Label htmlFor="r-cm">cm</Label>
+            </div>
+          </RadioGroup>
+        </div>
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <Label htmlFor="crop-top">Crop Top</Label>
-            <Slider id="crop-top" value={[cropBox.top]} onValueChange={handleSliderChange('top')} max={200} step={1} />
+            <div className='flex justify-between'><Label htmlFor="crop-top">Crop Top</Label><span className="text-sm text-muted-foreground">{getConvertedValue(cropBox.top)} {unit}</span></div>
+            <Slider id="crop-top" value={[getConvertedValue(cropBox.top)]} onValueChange={handleSliderChange('top')} max={conversion.max} step={conversion.step} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="crop-right">Crop Right</Label>
-            <Slider id="crop-right" value={[cropBox.right]} onValueChange={handleSliderChange('right')} max={200} step={1} />
+            <div className='flex justify-between'><Label htmlFor="crop-right">Crop Right</Label><span className="text-sm text-muted-foreground">{getConvertedValue(cropBox.right)} {unit}</span></div>
+            <Slider id="crop-right" value={[getConvertedValue(cropBox.right)]} onValueChange={handleSliderChange('right')} max={conversion.max} step={conversion.step} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="crop-bottom">Crop Bottom</Label>
-            <Slider id="crop-bottom" value={[cropBox.bottom]} onValueChange={handleSliderChange('bottom')} max={200} step={1} />
+            <div className='flex justify-between'><Label htmlFor="crop-bottom">Crop Bottom</Label><span className="text-sm text-muted-foreground">{getConvertedValue(cropBox.bottom)} {unit}</span></div>
+            <Slider id="crop-bottom" value={[getConvertedValue(cropBox.bottom)]} onValueChange={handleSliderChange('bottom')} max={conversion.max} step={conversion.step} />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="crop-left">Crop Left</Label>
-            <Slider id="crop-left" value={[cropBox.left]} onValueChange={handleSliderChange('left')} max={200} step={1} />
+            <div className='flex justify-between'><Label htmlFor="crop-left">Crop Left</Label><span className="text-sm text-muted-foreground">{getConvertedValue(cropBox.left)} {unit}</span></div>
+            <Slider id="crop-left" value={[getConvertedValue(cropBox.left)]} onValueChange={handleSliderChange('left')} max={conversion.max} step={conversion.step} />
           </div>
         </div>
         <Button onClick={handleApply} className="w-full">
