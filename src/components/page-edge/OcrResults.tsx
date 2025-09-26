@@ -1,6 +1,6 @@
 'use client';
 
-import { ScanText, Loader2, Languages, Download, BookCopy, FileUp, CaseSensitive, Pilcrow, AlignLeft, AlignCenter, AlignRight, AlignJustify, FileText as FileTextIcon } from 'lucide-react';
+import { ScanText, Loader2, Languages, Download, BookCopy, FileUp, CaseSensitive, Pilcrow, AlignLeft, AlignCenter, AlignRight, AlignJustify, FileText as FileTextIcon, FileImage } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -155,6 +155,14 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       saveAs(blob, 'PageEdge-Export.docx');
     });
   };
+  
+    const handleExportJpg = () => {
+    toast({
+        title: `Exporting JPG`,
+        description: `This feature is not yet implemented.`,
+    });
+  }
+
 
   const handleRangeOcr = () => {
     const start = parseInt(rangeStart, 10);
@@ -268,6 +276,52 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
             />
           </div>
 
+          <Separator />
+          
+          <Button onClick={onTranslate} disabled={!ocrResult || isTranslating} className="w-full">
+            {isTranslating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Languages className="mr-2 h-4 w-4" />
+            )}
+            Translate Summary
+          </Button>
+
+          {isTranslating && (
+            <div className="space-y-4 mt-4">
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+            </div>
+          )}
+
+          {translationResult && (
+            <div className="space-y-4 mt-4">
+              <div>
+                <Label htmlFor="translation-sindhi" className="mb-2 block font-sindhi">سنڌي ترجمو</Label>
+                <Textarea
+                  id="translation-sindhi"
+                  readOnly
+                  value={translationResult.translation1}
+                  className="h-28 text-right font-sindhi text-lg"
+                  dir="rtl"
+                />
+              </div>
+              <div>
+                <Label htmlFor="translation-urdu" className="mb-2 block" style={{ fontFamily: 'Jameel Noori Nastaleeq' }}>اردو ترجمہ</Label>
+                <Textarea
+                  id="translation-urdu"
+                  readOnly
+                  value={translationResult.translation2}
+                  className="h-28 text-right"
+                  style={{ fontFamily: 'Jameel Noori Nastaleeq', fontSize: '1.2rem' }}
+                  dir="rtl"
+                />
+              </div>
+            </div>
+          )}
+
+          <Separator />
+
            <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="formatting-options">
                 <AccordionTrigger>Formatting Options</AccordionTrigger>
@@ -376,56 +430,28 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
             </Accordion>
 
 
-          <Separator />
-          
-          <Button onClick={onTranslate} disabled={!ocrResult || isTranslating} className="w-full">
-            {isTranslating ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Languages className="mr-2 h-4 w-4" />
-            )}
-            Translate Summary
-          </Button>
-
-          {isTranslating && (
-            <div className="space-y-4 mt-4">
-                <Skeleton className="h-24 w-full" />
-                <Skeleton className="h-24 w-full" />
-            </div>
-          )}
-
-          {translationResult && (
-            <div className="space-y-4 mt-4">
-              <div>
-                <Label htmlFor="translation-sindhi" className="mb-2 block font-sindhi">سنڌي ترجمو</Label>
-                <Textarea
-                  id="translation-sindhi"
-                  readOnly
-                  value={translationResult.translation1}
-                  className="h-28 text-right font-sindhi text-lg"
-                  dir="rtl"
-                />
-              </div>
-              <div>
-                <Label htmlFor="translation-urdu" className="mb-2 block" style={{ fontFamily: 'Jameel Noori Nastaleeq' }}>اردو ترجمہ</Label>
-                <Textarea
-                  id="translation-urdu"
-                  readOnly
-                  value={translationResult.translation2}
-                  className="h-28 text-right"
-                  style={{ fontFamily: 'Jameel Noori Nastaleeq', fontSize: '1.2rem' }}
-                  dir="rtl"
-                />
-              </div>
-            </div>
-          )}
-
-           <Button onClick={handleExportWord} disabled={!canExport} variant="secondary" className="w-full">
-            <Download className="mr-2 h-4 w-4" />
-            Export as Word (.docx)
-          </Button>
+            <Separator />
+            <Accordion type="single" collapsible className="w-full">
+              <AccordionItem value="export-options">
+                <AccordionTrigger>Export Options</AccordionTrigger>
+                <AccordionContent>
+                  <div className="grid grid-cols-1 gap-4 pt-4">
+                     <Button onClick={handleExportWord} disabled={!canExport}>
+                        <Download className="mr-2 h-4 w-4" />
+                        Export as Word (.docx)
+                      </Button>
+                      <Button variant="secondary" onClick={handleExportJpg}>
+                        <FileImage className="mr-2 h-4 w-4" />
+                        Export as JPG
+                      </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
         </div>
       )}
     </div>
   );
 }
+
+    

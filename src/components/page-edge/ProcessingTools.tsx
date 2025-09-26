@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Wand2, Download, Loader2, Check, AlignHorizontalJustifyStart, Crop, Send } from 'lucide-react';
+import { Wand2, Download, Loader2, Check, AlignHorizontalJustifyStart, Crop, Send, FileImage } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -58,13 +58,6 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
   const handleUnitChange = (newUnit: Unit) => {
     setUnit(newUnit);
   };
-
-  const handleExport = () => {
-    toast({
-        title: `Exporting JPG`,
-        description: `This feature is not yet implemented.`,
-    });
-  }
 
   const handleApply = () => {
     onCropBoxApply();
@@ -230,21 +223,8 @@ export function ProcessingTools({ onEnhance, enhancementResult, isEnhancing, cro
       
       <Separator />
 
-       <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="export-options" className="border-b-0">
-          <AccordionTrigger className="flex w-full items-center justify-between text-md font-medium hover:no-underline py-0">
-            Export Options
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="grid grid-cols-1 gap-4 pt-6">
-              <Button variant="secondary" onClick={handleExport}>
-                <Download className="mr-2 h-4 w-4" />
-                Export as JPG
-              </Button>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
     </div>
   );
 }
+
+    
