@@ -15,6 +15,8 @@ export default {
         code: ['monospace'],
         serif: ['"Times New Roman"', 'serif'],
         sindhi: ['"MB Lateefi"','General Sans', 'sans-serif'],
+        sans: ['"General Sans"', 'sans-serif'],
+        literata: ['"Literata"', 'serif'],
       },
       colors: {
         background: 'hsl(var(--background))',
