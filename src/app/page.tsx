@@ -253,10 +253,9 @@ export default function PageEdgeHome() {
         left: result.data.left,
       };
       updateActivePage({ cropBox: newCropBox });
-      handleCropBoxApply(newCropBox, true);
        toast({
-        title: 'Custom Crop Applied',
-        description: 'The crop based on your command has been applied.',
+        title: 'Custom Crop Suggested',
+        description: 'The crop based on your command is shown with a dashed line.',
       });
     } else {
       toast({
