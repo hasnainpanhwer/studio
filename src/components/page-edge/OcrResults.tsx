@@ -9,7 +9,7 @@ import type { OcrResult, TranslationResult, Page, FormattingOptions } from '@/li
 import { Skeleton } from '../ui/skeleton';
 import { Separator } from '../ui/separator';
 import { Input } from '../ui/input';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { Packer as PackerType, PageSize as PageSizeType, AlignmentType } from 'docx';
 import type { saveAs as saveAsType } from 'file-saver';
@@ -43,21 +43,28 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     pageSize: 'A4',
   });
 
-  const [docx, setDocx] = useState<any>(null);
-  const [fileSaver, setFileSaver] = useState<any>(null);
+  const docxRef = useRef<any>(null);
+  const fileSaverRef = useRef<any>(null);
+  const [libsLoaded, setLibsLoaded] = useState(false);
 
 
   useEffect(() => {
     // Dynamically import client-side libraries only on the client
-    import('docx').then(module => setDocx(module));
-    import('file-saver').then(module => setFileSaver(module));
+    Promise.all([
+      import('docx'),
+      import('file-saver')
+    ]).then(([docxModule, fileSaverModule]) => {
+      docxRef.current = docxModule;
+      fileSaverRef.current = fileSaverModule;
+      setLibsLoaded(true);
+    }).catch(error => console.error("Failed to load export libraries", error));
   }, []);
 
   const handleExportWord = async () => {
-    if (!ocrResult || !docx || !fileSaver) return;
+    if (!ocrResult || !docxRef.current || !fileSaverRef.current) return;
     
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageSize } = docx;
-    const { saveAs } = fileSaver;
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageSize } = docxRef.current;
+    const { saveAs } = fileSaverRef.current;
     
     const getAlignment = (align: 'left' | 'center' | 'right' | 'justify') => {
       switch(align) {
@@ -68,7 +75,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       }
     }
     
-    const selectedPageSize = PageSize[formatting.pageSize as keyof typeof PageSize] || PageSize.A4;
+    const selectedPageSize = PageSize[formatting.pageSize as keyof typeof PageSizeType] || PageSize.A4;
 
     const doc = new Document({
       sections: [{
@@ -173,7 +180,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     onBulkOcr(pagesToProcess);
   };
 
-  const canExport = !!docx && !!fileSaver && !!ocrResult;
+  const canExport = libsLoaded && !!ocrResult;
 
 
   return (
@@ -447,5 +454,3 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     </div>
   );
 }
-
-    
