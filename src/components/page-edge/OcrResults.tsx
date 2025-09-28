@@ -43,26 +43,20 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     pageSize: 'A4',
   });
 
-  const [docxPacker, setDocxPacker] = useState<typeof PackerType | null>(null);
-  const [fileSaver, setFileSaver] = useState<{ saveAs: typeof saveAsType } | null>(null);
-  const [docx, setDocx] = useState<{ PageSize: typeof PageSizeType } | null>(null);
+  const [docx, setDocx] = useState<any>(null);
+  const [fileSaver, setFileSaver] = useState<any>(null);
 
 
   useEffect(() => {
     // Dynamically import client-side libraries only on the client
-    import('docx').then(module => {
-        setDocxPacker(() => module.Packer);
-        setDocx({ PageSize: module.PageSize });
-    });
-    import('file-saver').then(module => setFileSaver({ saveAs: module.saveAs }));
+    import('docx').then(module => setDocx(module));
+    import('file-saver').then(module => setFileSaver(module));
   }, []);
 
   const handleExportWord = async () => {
-    if (!ocrResult || !docxPacker || !fileSaver || !docx) return;
-
-    // We need to dynamically import these as well to use their types.
-    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx');
-
+    if (!ocrResult || !docx || !fileSaver) return;
+    
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageSize } = docx;
     const { saveAs } = fileSaver;
     
     const getAlignment = (align: 'left' | 'center' | 'right' | 'justify') => {
@@ -74,7 +68,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       }
     }
     
-    const selectedPageSize = docx.PageSize[formatting.pageSize as keyof typeof docx.PageSize];
+    const selectedPageSize = PageSize[formatting.pageSize as keyof typeof PageSize] || PageSize.A4;
 
     const doc = new Document({
       sections: [{
@@ -151,7 +145,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       }],
     });
 
-    docxPacker.toBlob(doc).then(blob => {
+    Packer.toBlob(doc).then(blob => {
       saveAs(blob, 'PageEdge-Export.docx');
     });
   };
@@ -179,7 +173,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     onBulkOcr(pagesToProcess);
   };
 
-  const canExport = !!docxPacker && !!fileSaver && !!ocrResult && !!docx;
+  const canExport = !!docx && !!fileSaver && !!ocrResult;
 
 
   return (
