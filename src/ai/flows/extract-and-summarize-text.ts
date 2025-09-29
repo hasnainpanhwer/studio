@@ -22,7 +22,7 @@ export type ExtractAndSummarizeTextInput = z.infer<typeof ExtractAndSummarizeTex
 
 const ExtractAndSummarizeTextOutputSchema = z.object({
   extractedText: z.string().describe('The extracted text from the image.'),
-  summary: z.string().describe('A concise summary of the extracted text.'),
+  summary: z.string().describe('A concise summary of the extracted text in English.'),
   sindhiTranslation: z.string().describe('The Sindhi translation of the summary.'),
 });
 export type ExtractAndSummarizeTextOutput = z.infer<typeof ExtractAndSummarizeTextOutputSchema>;
@@ -47,14 +47,14 @@ const summaryPrompt = ai.definePrompt({
   name: 'summaryPrompt',
   input: {schema: z.object({extractedText: z.string()})},
   output: {schema: z.object({summary: z.string()})},
-  prompt: `Summarize the following text in a concise manner:\n\n{{{extractedText}}}`,
+  prompt: `Provide a concise summary of the following text in English:\n\n{{{extractedText}}}`,
 });
 
 const sindhiTranslationPrompt = ai.definePrompt({
   name: 'sindhiTranslationPrompt',
   input: {schema: z.object({textToTranslate: z.string()})},
   output: {schema: z.object({sindhiTranslation: z.string()})},
-  prompt: `Translate the following English text into Sindhi:
+  prompt: `Translate the following English text into Sindhi (in the Sindhi script):
 
 "{{{textToTranslate}}}"
 `,
