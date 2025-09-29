@@ -62,7 +62,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
   const handleExportWord = async () => {
     if (!ocrResult || !docxRef.current || !fileSaverRef.current) return;
     
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, PageSize } = docxRef.current;
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = docxRef.current;
     const { saveAs } = fileSaverRef.current;
     
     const getAlignment = (align: 'left' | 'center' | 'right' | 'justify') => {
@@ -74,7 +74,15 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       }
     }
     
-    const selectedPageSize = PageSize['A4'];
+    const selectedPageSize = docxRef.current.PageSize ? docxRef.current.PageSize['A4'] : undefined;
+    if (!selectedPageSize) {
+      toast({
+        variant: 'destructive',
+        title: 'Export Failed',
+        description: 'Page size information could not be loaded.',
+      });
+      return;
+    }
 
     const doc = new Document({
       sections: [{
