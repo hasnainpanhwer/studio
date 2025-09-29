@@ -1,15 +1,15 @@
 'use server';
 /**
- * @fileOverview Extracts text from an image using OCR and provides a concise summary.
+ * @fileOverview Extracts text from an image, provides a concise summary, and translates the summary into Sindhi.
  *
- * - extractAndSummarizeText - A function that handles the text extraction and summarization process.
+ * - extractAndSummarizeText - A function that handles the text extraction, summarization, and translation process.
  * - ExtractAndSummarizeTextInput - The input type for the extractAndSummarizeText function.
  * - ExtractAndSummarizeTextOutput - The return type for the extractAndSummarizeText function.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { googleAI } from '@genkit-ai/googleai';
+import {googleAI} from '@genkit-ai/googleai';
 
 const ExtractAndSummarizeTextInputSchema = z.object({
   photoDataUri: z
@@ -23,10 +23,13 @@ export type ExtractAndSummarizeTextInput = z.infer<typeof ExtractAndSummarizeTex
 const ExtractAndSummarizeTextOutputSchema = z.object({
   extractedText: z.string().describe('The extracted text from the image.'),
   summary: z.string().describe('A concise summary of the extracted text.'),
+  sindhiTranslation: z.string().describe('The Sindhi translation of the summary.'),
 });
 export type ExtractAndSummarizeTextOutput = z.infer<typeof ExtractAndSummarizeTextOutputSchema>;
 
-export async function extractAndSummarizeText(input: ExtractAndSummarizeTextInput): Promise<ExtractAndSummarizeTextOutput> {
+export async function extractAndSummarizeText(
+  input: ExtractAndSummarizeTextInput
+): Promise<ExtractAndSummarizeTextOutput> {
   return extractAndSummarizeTextFlow(input);
 }
 
@@ -47,6 +50,16 @@ const summaryPrompt = ai.definePrompt({
   prompt: `Summarize the following text in a concise manner:\n\n{{{extractedText}}}`,
 });
 
+const sindhiTranslationPrompt = ai.definePrompt({
+  name: 'sindhiTranslationPrompt',
+  input: {schema: z.object({textToTranslate: z.string()})},
+  output: {schema: z.object({sindhiTranslation: z.string()})},
+  prompt: `Translate the following English text into Sindhi:
+
+"{{{textToTranslate}}}"
+`,
+});
+
 const extractAndSummarizeTextFlow = ai.defineFlow(
   {
     name: 'extractAndSummarizeTextFlow',
@@ -54,15 +67,38 @@ const extractAndSummarizeTextFlow = ai.defineFlow(
     outputSchema: ExtractAndSummarizeTextOutputSchema,
   },
   async input => {
+    // Step 1: Extract text from image
     const ocrResult = await ocrPrompt(input);
     const extractedText = ocrResult.output?.extractedText || '';
 
+    if (!extractedText) {
+      return {
+        extractedText: '',
+        summary: '',
+        sindhiTranslation: '',
+      };
+    }
+
+    // Step 2: Generate summary from extracted text
     const summaryResult = await summaryPrompt({extractedText});
     const summary = summaryResult.output?.summary || '';
+    
+    if (!summary) {
+       return {
+        extractedText,
+        summary: '',
+        sindhiTranslation: '',
+      };
+    }
+
+    // Step 3: Translate summary to Sindhi
+    const translationResult = await sindhiTranslationPrompt({ textToTranslate: summary });
+    const sindhiTranslation = translationResult.output?.sindhiTranslation || '';
 
     return {
       extractedText,
       summary,
+      sindhiTranslation,
     };
   }
 );
