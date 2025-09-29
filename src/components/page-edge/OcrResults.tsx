@@ -40,7 +40,6 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
     alignment: 'left',
     sindhiFont: 'MB Lateefi',
     urduFont: 'Jameel Noori Nastaleeq',
-    pageSize: 'A4',
   });
 
   const docxRef = useRef<any>(null);
@@ -75,7 +74,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       }
     }
     
-    const selectedPageSize = PageSize[formatting.pageSize as keyof typeof PageSize] || PageSize.A4;
+    const selectedPageSize = PageSize['A4'];
 
     const doc = new Document({
       sections: [{
@@ -329,25 +328,6 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                 <AccordionContent>
                     <div className="space-y-4 pt-4">
                       <p className="text-sm text-muted-foreground">These settings will be applied to the exported Word document.</p>
-                       <div className="space-y-2">
-                          <Label>Page Size</Label>
-                          <Select
-                            value={formatting.pageSize}
-                            onValueChange={(value) => setFormatting(f => ({ ...f, pageSize: value }))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select page size" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="A4">A4</SelectItem>
-                              <SelectItem value="LETTER">Letter</SelectItem>
-                              <SelectItem value="LEGAL">Legal</SelectItem>
-                              <SelectItem value="A5">A5 (Book)</SelectItem>
-                              <SelectItem value="A6">A6 (Pocket Book)</SelectItem>
-                              <SelectItem value="EXECUTIVE">Executive (7.25" x 10.5")</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label>Font Family</Label>
