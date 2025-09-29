@@ -34,7 +34,9 @@ const ocrPrompt = ai.definePrompt({
   name: 'ocrPrompt',
   input: {schema: ExtractAndSummarizeTextInputSchema},
   output: {schema: z.object({extractedText: z.string()})},
-  prompt: `Extract the text from the following image: {{media url=photoDataUri}}`,
+  prompt: `Extract all text from the following image. The text may be in Roman Sindhi, Roman Urdu, English, Sindhi, or Urdu. Preserve the original language and script.
+
+Image: {{media url=photoDataUri}}`,
   model: googleAI.model('gemini-2.5-flash'),
 });
 
