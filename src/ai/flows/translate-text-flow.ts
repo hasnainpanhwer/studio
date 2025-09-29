@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Translates text into Sindhi and Urdu.
+ * @fileOverview Translates text from English to Urdu, and then from Urdu to Sindhi.
  *
  * - translateText - A function that handles the text translation process.
  * - TranslateTextInput - The input type for the translateText function.
@@ -11,13 +11,13 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const TranslateTextInputSchema = z.object({
-  textToTranslate: z.string().describe('The text to be translated.'),
+  textToTranslate: z.string().describe('The text to be translated, which is in English.'),
 });
 export type TranslateTextInput = z.infer<typeof TranslateTextInputSchema>;
 
 const TranslateTextOutputSchema = z.object({
-  translation1: z.string().describe('The text translated into Sindhi.'),
-  translation2: z.string().describe('The text translated into Urdu.'),
+  translation1: z.string().describe('The final text translated into Sindhi.'),
+  translation2: z.string().describe('The intermediate text translated into Urdu.'),
 });
 export type TranslateTextOutput = z.infer<typeof TranslateTextOutputSchema>;
 
@@ -25,19 +25,28 @@ export async function translateText(input: TranslateTextInput): Promise<Translat
   return translateTextFlow(input);
 }
 
-const translatePrompt = ai.definePrompt({
-  name: 'translatePrompt',
-  input: {schema: TranslateTextInputSchema},
-  output: {schema: TranslateTextOutputSchema},
-  prompt: `You are a translation expert. Translate the following text into two languages as requested.
+// Prompt 1: English to Urdu
+const englishToUrduPrompt = ai.definePrompt({
+  name: 'englishToUrduPrompt',
+  input: {schema: z.object({ text: z.string() })},
+  output: {schema: z.object({ urduTranslation: z.string() })},
+  prompt: `Translate the following English text into Urdu:
 
-Text to translate:
-{{{textToTranslate}}}
-
-Translate the text above into "Sindhi" and return it in the 'translation1' field.
-Translate the text above into "Urdu" and return it in the 'translation2' field.
+"{{{text}}}"
 `,
 });
+
+// Prompt 2: Urdu to Sindhi
+const urduToSindhiPrompt = ai.definePrompt({
+  name: 'urduToSindhiPrompt',
+  input: {schema: z.object({ text: z.string() })},
+  output: {schema: z.object({ sindhiTranslation: z.string() })},
+  prompt: `Translate the following Urdu text into Sindhi:
+
+"{{{text}}}"
+`,
+});
+
 
 const translateTextFlow = ai.defineFlow(
   {
@@ -46,7 +55,26 @@ const translateTextFlow = ai.defineFlow(
     outputSchema: TranslateTextOutputSchema,
   },
   async input => {
-    const {output} = await translatePrompt(input);
-    return output!;
+    // Step 1: Translate English to Urdu
+    const urduResult = await englishToUrduPrompt({ text: input.textToTranslate });
+    const urduTranslation = urduResult.output?.urduTranslation || '';
+
+    if (!urduTranslation) {
+        throw new Error("Failed to translate from English to Urdu.");
+    }
+    
+    // Step 2: Translate Urdu to Sindhi
+    const sindhiResult = await urduToSindhiPrompt({ text: urduTranslation });
+    const sindhiTranslation = sindhiResult.output?.sindhiTranslation || '';
+
+    if (!sindhiTranslation) {
+        throw new Error("Failed to translate from Urdu to Sindhi.");
+    }
+
+    // Return both translations, mapping Sindhi to translation1 and Urdu to translation2
+    return {
+      translation1: sindhiTranslation,
+      translation2: urduTranslation,
+    };
   }
 );
