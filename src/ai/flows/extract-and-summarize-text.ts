@@ -47,7 +47,7 @@ const summaryPrompt = ai.definePrompt({
   name: 'summaryPrompt',
   input: {schema: z.object({extractedText: z.string()})},
   output: {schema: z.object({summary: z.string()})},
-  prompt: `Provide a concise summary of the following text in English:\n\n{{{extractedText}}}`,
+  prompt: `You are a professional researcher. Provide a concise and insightful summary of the following text in English, as if you have conducted research on the topic:\n\n{{{extractedText}}}`,
 });
 
 const sindhiTranslationPrompt = ai.definePrompt({
