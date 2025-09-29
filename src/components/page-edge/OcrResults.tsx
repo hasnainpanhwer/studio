@@ -74,12 +74,12 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       }
     }
     
-    const selectedPageSize = docxRef.current.PageSize ? docxRef.current.PageSize['A4'] : undefined;
+    const selectedPageSize = docxRef.current.PageSize?.A4;
     if (!selectedPageSize) {
       toast({
         variant: 'destructive',
         title: 'Export Failed',
-        description: 'Page size information could not be loaded.',
+        description: 'Page size information (A4) could not be loaded.',
       });
       return;
     }
