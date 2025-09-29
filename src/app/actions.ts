@@ -53,7 +53,7 @@ export async function getTranslations(textToTranslate: string): Promise<ActionRe
         return { success: false, error: 'No text provided for translation.' };
     }
     try {
-        const result = await translateText({ textToTranslate, language1: 'Sindhi', language2: 'Urdu' });
+        const result = await translateText({ textToTranslate });
         return { success: true, data: result };
     } catch (error) {
         console.error('Error translating text:', error);

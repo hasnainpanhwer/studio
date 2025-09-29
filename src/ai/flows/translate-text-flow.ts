@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview Translates text into specified languages.
+ * @fileOverview Translates text into Sindhi and Urdu.
  *
  * - translateText - A function that handles the text translation process.
  * - TranslateTextInput - The input type for the translateText function.
@@ -12,14 +12,12 @@ import {z} from 'genkit';
 
 const TranslateTextInputSchema = z.object({
   textToTranslate: z.string().describe('The text to be translated.'),
-  language1: z.string().describe('The first target language for translation.'),
-  language2: z.string().describe('The second target language for translation.'),
 });
 export type TranslateTextInput = z.infer<typeof TranslateTextInputSchema>;
 
 const TranslateTextOutputSchema = z.object({
-  translation1: z.string().describe('The text translated into the first target language.'),
-  translation2: z.string().describe('The text translated into the second target language.'),
+  translation1: z.string().describe('The text translated into Sindhi.'),
+  translation2: z.string().describe('The text translated into Urdu.'),
 });
 export type TranslateTextOutput = z.infer<typeof TranslateTextOutputSchema>;
 
@@ -36,8 +34,8 @@ const translatePrompt = ai.definePrompt({
 Text to translate:
 {{{textToTranslate}}}
 
-Translate the text above into "{{language1}}" and return it in the 'translation1' field.
-Translate the text above into "{{language2}}" and return it in the 'translation2' field.
+Translate the text above into "Sindhi" and return it in the 'translation1' field.
+Translate the text above into "Urdu" and return it in the 'translation2' field.
 `,
 });
 
