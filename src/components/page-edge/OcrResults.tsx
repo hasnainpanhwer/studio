@@ -17,6 +17,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 
+// Embed Page Sizes to avoid dynamic import issues
+const PAGE_SIZES = {
+  A4: {
+    width: 11906,
+    height: 16838,
+    orientation: 'portrait',
+  },
+  LETTER: {
+    width: 12240,
+    height: 15840,
+    orientation: 'portrait',
+  },
+  LEGAL: {
+    width: 12240,
+    height: 20160,
+    orientation: 'portrait',
+  },
+};
+
 
 interface OcrResultsProps {
   onOcr: () => void;
@@ -74,12 +93,13 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       }
     }
     
-    const selectedPageSize = docxRef.current.PageSize?.A4;
+    const selectedPageSize = PAGE_SIZES['A4'];
+
     if (!selectedPageSize) {
       toast({
         variant: 'destructive',
         title: 'Export Failed',
-        description: 'Page size information (A4) could not be loaded.',
+        description: 'Default page size information (A4) could not be loaded.',
       });
       return;
     }
