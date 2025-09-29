@@ -75,7 +75,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       }
     }
     
-    const selectedPageSize = PageSize[formatting.pageSize as keyof typeof PageSizeType] || PageSize.A4;
+    const selectedPageSize = PageSize[formatting.pageSize as keyof typeof PageSize] || PageSize.A4;
 
     const doc = new Document({
       sections: [{
