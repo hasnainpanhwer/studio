@@ -26,6 +26,10 @@ export default function RootLayout({
           href="https://fonts.for-the-people.com/serve/mblateefi.css" 
           rel="stylesheet" 
         />
+        <link
+          href="https://fonts.googleapis.com/css?family=Rancho&effect=shadow-multiple"
+          rel="stylesheet"
+        />
       </head>
       <body className="font-body antialiased">
         {children}
