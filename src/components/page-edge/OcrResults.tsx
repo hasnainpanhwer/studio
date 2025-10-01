@@ -16,7 +16,7 @@ import type { saveAs as saveAsType } from 'file-saver';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import type { jsPDF as jsPDFType } from 'jspdf';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 
 // Embed Page Sizes to avoid dynamic import issues
@@ -65,30 +65,17 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
 
   const docxRef = useRef<any>(null);
   const fileSaverRef = useRef<any>(null);
-  const jsPDFRef = useRef<any>(null);
   const [libsLoaded, setLibsLoaded] = useState(false);
-  const [base64LateefiFont, setBase64LateefiFont] = useState<string | null>(null);
 
   useEffect(() => {
     // Dynamically import client-side libraries only on the client
     Promise.all([
       import('docx'),
       import('file-saver'),
-      import('jspdf')
-    ]).then(([docxModule, fileSaverModule, jspdfModule]) => {
+    ]).then(([docxModule, fileSaverModule]) => {
       docxRef.current = docxModule;
       fileSaverRef.current = fileSaverModule;
-      jsPDFRef.current = jspdfModule;
       setLibsLoaded(true);
-
-      // Fetch and convert font for PDF
-      fetch('/fonts/MB-Lateefi-Regular.ttf')
-        .then(res => res.arrayBuffer())
-        .then(buf => {
-            const base64 = btoa(new Uint8Array(buf).reduce((data, byte) => data + String.fromCharCode(byte), ''));
-            setBase64LateefiFont(base64);
-        }).catch(error => console.error("Failed to load font for PDF", error));
-
     }).catch(error => console.error("Failed to load export libraries", error));
   }, []);
 
@@ -197,87 +184,6 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
       saveAs(blob, 'PageEdge-Export.docx');
     });
   };
-  
-  const handleExportPdf = () => {
-    if (!ocrResult || !jsPDFRef.current || !base64LateefiFont) {
-        toast({
-            variant: 'destructive',
-            title: 'Export Failed',
-            description: 'The PDF library or required fonts are not loaded yet. Please try again in a moment.',
-        });
-        return;
-    }
-    const { jsPDF } = jsPDFRef.current;
-    const doc = new jsPDF();
-    
-    // Add font
-    doc.addFileToVFS('MB-Lateefi-Regular.ttf', base64LateefiFont);
-    doc.addFont('MB-Lateefi-Regular.ttf', 'MBLateefi', 'normal');
-
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 20;
-    const margin = 15;
-    const maxWidth = pageWidth - margin * 2;
-
-    const checkY = (requiredHeight: number) => {
-        if (y + requiredHeight > pageHeight - margin) {
-            doc.addPage();
-            y = margin;
-        }
-    };
-
-    doc.setFontSize(22);
-    doc.text("PageEdge Export", pageWidth / 2, y, { align: 'center' });
-    y += 15;
-
-    doc.setFontSize(16);
-    doc.text("Extracted Text", margin, y);
-    y += 8;
-    doc.setFontSize(12);
-    const extractedLines = doc.splitTextToSize(ocrResult.extractedText, maxWidth);
-    checkY(extractedLines.length * 5);
-    doc.text(extractedLines, margin, y);
-    y += extractedLines.length * 5 + 10;
-    
-    checkY(20);
-    doc.setFontSize(16);
-    doc.text("Summary", margin, y);
-    y += 8;
-    doc.setFontSize(12);
-    const summaryLines = doc.splitTextToSize(ocrResult.summary, maxWidth);
-    checkY(summaryLines.length * 5);
-    doc.text(summaryLines, margin, y);
-    y += summaryLines.length * 5 + 10;
-    
-    if (translationResult) {
-        checkY(20);
-        doc.setFont('MBLateefi');
-        
-        doc.setFontSize(16);
-        doc.text("Sindhi Translation", pageWidth - margin, y, { align: 'right' });
-        y += 8;
-
-        doc.setFontSize(14);
-        const sindhiLines = doc.splitTextToSize(translationResult.translation1, maxWidth);
-        checkY(sindhiLines.length * 7);
-        doc.text(sindhiLines, pageWidth - margin, y, { align: 'right', lang: 'sd' });
-        y += sindhiLines.length * 7 + 10;
-
-        checkY(20);
-        doc.setFontSize(16);
-        doc.text("Urdu Translation", pageWidth - margin, y, { align: 'right' });
-        y += 8;
-        
-        doc.setFontSize(12);
-        const urduLines = doc.splitTextToSize(translationResult.translation2, maxWidth);
-        checkY(urduLines.length * 7);
-        doc.text(urduLines, pageWidth - margin, y, { align: 'right', lang: 'ur' });
-    }
-
-    doc.save('PageEdge-Export.pdf');
-  };
-
 
   const handleRangeOcr = () => {
     const start = parseInt(rangeStart, 10);
@@ -536,10 +442,19 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                         <Download className="mr-2 h-4 w-4" />
                         Export as Word (.docx)
                       </Button>
-                      <Button variant="secondary" onClick={handleExportPdf} disabled={!canExport || !base64LateefiFont}>
-                        <FileType className="mr-2 h-4 w-4" />
-                        Export as PDF
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="secondary" disabled>
+                                    <FileType className="mr-2 h-4 w-4" />
+                                    Export as PDF
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>PDF export is temporarily unavailable.</p>
+                            </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                   </div>
                 </AccordionContent>
               </AccordionItem>
