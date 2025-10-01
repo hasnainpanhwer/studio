@@ -284,7 +284,16 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
           <div>
             <Label htmlFor="extracted-text" className="mb-2 block">Extracted Text</Label>
             <ScrollArea className="h-60 w-full rounded-md border">
-                <div className="p-4 font-serif text-sm">{ocrResult.extractedText || "No text extracted."}</div>
+                <div 
+                  className="p-4"
+                  style={{
+                    fontFamily: formatting.fontFamily,
+                    fontSize: `${formatting.fontSize}pt`,
+                    textAlign: formatting.alignment,
+                  }}
+                >
+                  {ocrResult.extractedText || "No text extracted."}
+                </div>
             </ScrollArea>
           </div>
           <div>
@@ -368,7 +377,7 @@ export function OcrResults({ onOcr, ocrResult, isOcring, onTranslate, isTranslat
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>Font Size</Label>
+                          <Label>Font Size (pt)</Label>
                           <Input 
                             type="number" 
                             value={formatting.fontSize}
