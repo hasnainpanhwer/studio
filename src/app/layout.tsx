@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "PageEdge",
+  title: "PageEdge: OCR & Translation",
   description: "Scan and process book or magazine pages with AI.",
 };
 
@@ -21,7 +21,6 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
           rel="stylesheet"
         />
-        {/* The following link for MB Lateefi might not be the most stable. If it fails, a local font setup would be better. */}
         <link 
           href="https://fonts.for-the-people.com/serve/mblateefi.css" 
           rel="stylesheet" 
