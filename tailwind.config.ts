@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -10,13 +11,13 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Literata', 'serif'],
+        body: ['var(--font-inter)', 'sans-serif'],
+        headline: ['var(--font-literata)', 'serif'],
         code: ['monospace'],
         serif: ['"Times New Roman"', 'serif'],
         sindhi: ['"MB Lateefi"','General Sans', 'sans-serif'],
         sans: ['"General Sans"', 'sans-serif'],
-        literata: ['"Literata"', 'serif'],
+        literata: ['var(--font-literata)', 'serif'],
       },
       colors: {
         background: 'hsl(var(--background))',

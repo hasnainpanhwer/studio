@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Extracts text from an image, provides a concise summary, and translates the summary into Sindhi.
@@ -9,7 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {googleAI} from '@genkit-ai/googleai';
+import {googleAI} from '@genkit-ai/google-genai';
 
 const ExtractAndSummarizeTextInputSchema = z.object({
   photoDataUri: z
